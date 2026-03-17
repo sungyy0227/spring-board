@@ -1,0 +1,65 @@
+<html xmlns:th="http://www.thymeleaft.org" lang="ko">
+<link rel="stylesheet" th:href="@{/css/main.css}">
+<head>
+<title>메인</title>
+</head>
+<body>
+<div class="menu">
+    <form th:action="@{/write}" method="get">
+        <button type="submit">글작성</button>
+    </form>
+
+    <div class="right-menu">
+
+        <div th:if="${loginMember == null}">
+            <form th:action="@{/login}" method="get">
+                <button>로그인</button>
+            </form>
+        </div>
+
+        <div th:if="${loginMember != null}">
+            <span th:text="${loginMember.nickname} + ' 님'"></span>
+
+            <div th:if="${loginMember.role == 'admin'}">
+                <form th:action="@{/admin}"><button>관리자페이지</button></form>
+            </div>
+
+            <form th:action="@{/logout}" method="post">
+                <button>로그아웃</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+<table>
+    <colgroup>
+        <col style="width: 10%;">
+        <col style="width: 60%;">
+        <col style="width: 20%;">
+        <col style="width: 10%;">
+    </colgroup>
+    <thead>
+        <tr>
+            <th scope="col">번호</th>
+            <th scope="col">제목</th>
+            <th scope="col">작성자</th>
+            <th scope="col">조회수</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="post : ${posts}">
+            <td th:text="${post.id}"></td>
+            <td>
+            <a th:href="@{/post/{id}(id=${post.id})}"
+               th:text="${post.title}">제목</a>
+            </td>
+            <td th:text="${post.poster}"></td>
+            <td th:text="${post.viewCount}"></td>
+        </tr>
+    </tbody>
+</table>
+
+<a th:href="@{/getAdmin}">관리자권한얻기</a>
+<a th:href="@{/removeAdmin}">관리자권한제거</a>
+</body>
+</html>

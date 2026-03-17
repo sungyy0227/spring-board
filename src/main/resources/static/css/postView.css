@@ -1,0 +1,41 @@
+.content-box{
+    width: 800px;
+}
+
+.meta{
+  display: flex;
+  margin-top: 6px;
+}
+
+.viewCount{
+  margin-left: auto; /* 오른쪽 */
+}
+
+.post-actions{
+  width: 800px;
+  display: flex;
+  justify-content: space-between; /* 왼쪽 / 오른쪽 */
+  align-items: center;
+}
+
+.deleteAndModify{
+  display: flex;   /* 글삭제, 글수정 가로로 */
+  gap: 8px;        /* 사이 간격 */
+  align-items: center;
+}
+
+.deleteAndModify form{
+  margin: 0;       /* form 기본 여백 제거 */
+}
+table{
+    width:800px;
+}
+td:nth-child(1), th:nth-child(1) {
+  text-align: left;
+}
+td:nth-child(2), th:nth-child(2) {
+  text-align: left;
+}
+td:nth-child(3), th:nth-child(3) {
+  text-align: right;
+}

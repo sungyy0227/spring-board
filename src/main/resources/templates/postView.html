@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<link rel="stylesheet" th:href="@{/css/postView.css}">
+<head>
+    <title th:text="${post.title}">게시물 상제 페이지</title>
+</head>
+<body>
+<div class="content-box">
+    <div class="head">
+        <h2 th:text="${post.title}">제목</h2>
+
+        <div class="meta">
+            <em th:text="${post.poster}">작성자</em>
+            <span class="viewCount">조회수: [[${post.viewCount}]]</span>
+        </div>
+    </div>
+    <hr>
+    <div class="article">
+        <p th:text="${post.content}">내용</p>
+    </div>
+</div>
+<div class="post-actions">
+    <form th:action="@{/}" method="get">
+        <button type="submit">글목록</button>
+    </form>
+<div class="deleteAndModify">
+
+    <form th:action="@{/post/delete/{id}(id=${post.id})}" method="post">
+        <button type="submit">글삭제</button>
+    </form>
+
+    <form th:action="@{/post/modify/{id}(id=${post.id})}" method="get">
+        <button type="submit">글수정</button>
+    </form>
+</div>
+</div>
+<table>
+    <colgroup>
+        <col style="width: 8%;">
+        <col style="width: 87%;">
+        <col style="width: 5%;">
+    </colgroup>
+    <tr th:each="comment: ${post.comments}">
+        <td th:text="${comment.commenter}">작성자</td>
+        <td th:text="${comment.commentContent}">내용</td>
+        <td>
+        <form th:action="@{/post/{postId}/comment/{commentId}/delete(postId=${post.id}, commentId=${comment.id})}" method="post">
+            <button type="submit">X</button>
+        </form></td>
+    </tr>
+</table>
+<div class="comment-actions">
+    <form th:action="@{/post/comment/{id}(id=${post.id})}" method="post">
+        <input name="commenter" placeholder="작성자">
+        <input name="commentContent" placeholder="댓글">
+        <button type="submit">댓글등록</button>
+    </form>
+</div>
+</body>
+</html>

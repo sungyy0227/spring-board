@@ -1,0 +1,48 @@
+table { width: 800px; border-collapse: collapse; table-layout: fixed; }
+th, td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+
+th { text-align: left; }              /* 헤더 왼쪽 */
+td:nth-child(1), th:nth-child(1) {    /* 번호 */
+  width: 80px;
+  text-align: center;
+}
+td:nth-child(2), th:nth-child(2) {    /* 제목 */
+  text-align: center;
+}
+td:nth-child(3), th:nth-child(3) {    /* 작성자 */
+  width: 140px;
+  text-align: center;
+}
+
+td:nth-child(4), th:nth-child(4) {    /* 조회수 */
+  text-align: center;
+}
+
+
+.menu{
+  display: flex;
+  width: 800px;
+  align-items: center;
+}
+
+.login{
+  margin-left: auto;
+}
+
+.right-menu{
+  margin-left: auto;   /* 이 한 줄이 핵심 */
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+/* right-menu 안의 div(th:if로 생기는 래퍼)도 가로 정렬 */
+.right-menu > div{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* form도 block이라 줄바꿈 원인이 될 수 있어서 */
+.right-menu form{
+  margin: 0;
+}

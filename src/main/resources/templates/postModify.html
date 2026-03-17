@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<!--<link rel="stylesheet" th:href="@{/css/postView.css}">-->
+<head>
+    <title th:text="${post.title}">게시물 수정</title>
+</head>
+<body>
+<form th:action="@{/post/modifyRequest/{id}(id=${post.id})}" th:object="${postdto}" method="post">
+    <table>
+        <tr>
+            <td><input th:field="*{title}" placeholder="제목입력" value="${post.title}"></td>
+            <td><input th:field="*{poster}" placeholder="작성자 입력" value="${post.poster}"></td>
+        </tr>
+
+        <tr>
+            <td colspan="2"><textarea th:field="*{content}" placeholder="내용 입력">[[${post.content}]]</textarea></td>
+        </tr>
+
+    </table>
+    <input type="submit" value="수정하기">
+</form>
+<a th:href="@{/}">글목록</a>
+</body>
+</html>

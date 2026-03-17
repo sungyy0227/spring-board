@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<link rel="stylesheet" th:href="@{/css/postWrite.css}">
+<head>
+    <title>게시물 작성</title>
+</head>
+<body>
+<form th:action="@{/uploadPost}" th:object="${postdto}" method="post">
+    <table>
+        <tr>
+            <td><input th:field="*{title}" placeholder="제목입력"></td>
+            <td><input th:field="*{poster}" placeholder="작성자 입력"></td>
+        </tr>
+
+        <tr>
+            <td colspan="2"><textarea th:field="*{content}" placeholder="내용 입력"></textarea></td>
+        </tr>
+
+    </table>
+    <button type="submit">작성</button>
+</form>
+</body>
+</html>

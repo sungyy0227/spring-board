@@ -1,0 +1,83 @@
+package spring.board.service;
+
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import spring.board.controller.MemberDto;
+import spring.board.domain.Member;
+import spring.board.repository.MemberRepository;
+
+@Service
+@Transactional
+public class MemberService {
+    private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder){
+        this.passwordEncoder=passwordEncoder;
+        this.memberRepository=memberRepository;
+    }
+
+    public Long join(Member member){
+        memberRepository.save(member);
+        return member.getId();
+    }
+
+    public void deleteAccount(Long id){
+        memberRepository.deleteById(id);
+    }
+
+    public void signup(MemberDto memberDto){
+        if(memberRepository.existsByLoginId(memberDto.getLoginId())){
+            throw new IllegalArgumentException("이미 사용중인 아이디 입니다.");
+        }
+
+        if(memberRepository.existsByNickname(memberDto.getNickname())){
+            throw new IllegalArgumentException("이미 사용중인 닉네임 입니다.");
+        }
+
+        Member member=new Member();
+        member.setLoginId(memberDto.getLoginId());
+        member.setPassword(passwordEncoder.encode(memberDto.getPassword()));
+        member.setNickname(memberDto.getNickname());
+        member.setRole("user");
+
+        memberRepository.save(member);
+    }
+
+    public void resetAllMember(){
+        memberRepository.deleteAllNative();
+        memberRepository.resetId();
+    }
+
+    public Member login(String loginId, String rawPassword){
+        Member member=memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("아이디 틀림")); //예외를 추후 "아이디 또는 비밀번호가 올바르지 않습니다." 로 바꿀것
+        if(!passwordEncoder.matches(rawPassword, member.getPassword())){
+            throw new IllegalArgumentException("비밀번호 틀림"); //예외를 추후 "아이디 또는 비밀번호가 올바르지 않습니다."로 바꿀것
+        }
+        return member;
+    }
+
+    public Member findByLoginId(String keyword){
+        return memberRepository.findByLoginId(keyword)
+                .orElseThrow(()-> new IllegalArgumentException("회원이 없습니다."));
+    }
+
+    public Member findByNickname(String keyword){
+        return memberRepository.findByNickname(keyword)
+                .orElseThrow(()-> new IllegalArgumentException("회원이 없습니다."));
+    }
+
+    public void grantAdmin(Long id) {
+        Member member=memberRepository.findById(id).orElseThrow();
+        member.setRole("admin");
+    }
+
+    public void removeAdmin(Long id){
+        Member member=memberRepository.findById(id).orElseThrow();
+        member.setRole("user"); //권한을 제거해도 세션이 있는 정보는 새로고침이 안됨
+    }
+}
