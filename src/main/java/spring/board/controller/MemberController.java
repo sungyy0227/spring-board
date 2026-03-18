@@ -34,13 +34,13 @@ public class MemberController {
     @GetMapping("/login")
     public String loginPage(Model model){
         model.addAttribute("loginDto",new LoginDto());
-        return "login.html";
+        return "login";
     }
 
     @GetMapping("/login/signup")
     public String signupPage(Model model){
         model.addAttribute("memberdto",new MemberDto());
-        return "signup.html";
+        return "signup";
     }
 
     @PostMapping("/login/signup")

@@ -7,21 +7,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import spring.board.domain.Comment;
-import spring.board.domain.Member;
 import spring.board.domain.Post;
-import spring.board.repository.CommentRepository;
 import spring.board.service.CommentService;
 import spring.board.service.MemberService;
 import spring.board.service.PostService;
 
 @Controller
-public class postController {
+public class PostController {
     private final PostService postService;
     private final CommentService commentService;
     private final MemberService memberService;
 
     @Autowired
-    public postController(PostService postService, CommentService commentService, MemberService memberService) {
+    public PostController(PostService postService, CommentService commentService, MemberService memberService) {
         this.postService = postService;
         this.commentService=commentService;
         this.memberService = memberService;
@@ -40,7 +38,13 @@ public class postController {
     }
 
     @GetMapping("/write")
-    public String postWrite(Model model){
+    public String postWrite(Model model, HttpServletRequest request){
+        HttpSession session=request.getSession(false);
+
+        if(session!=null){
+            SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
+            model.addAttribute("loginMember", loginMember);
+        }
         model.addAttribute("postdto",new PostDto());
         return "postWrite";
     }
@@ -59,13 +63,26 @@ public class postController {
     }
 
     @PostMapping("/uploadPost")
-    public String uploadPost(PostDto postdto){
-        Post post=new Post();
-        post.setPoster(postdto.getPoster());
+    public String uploadPost(PostDto postdto, HttpServletRequest request){ //세션 체크는 나중에 인터셉터로 빼기
+        HttpSession session = request.getSession(false);
+        SessionMember loginMember = null;
+
+        if (session != null) {
+            loginMember = (SessionMember) session.getAttribute("loginMember");
+        }
+
+        Post post = new Post();
+
+        if (loginMember != null) {
+            post.setPoster(loginMember.getNickname());
+        } else {
+            post.setPoster(postdto.getPoster());
+        }
+
         post.setTitle(postdto.getTitle());
         post.setContent(postdto.getContent());
-        postService.join(post);
 
+        postService.join(post);
         return "redirect:/";
     }
 

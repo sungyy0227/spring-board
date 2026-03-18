@@ -9,7 +9,10 @@
     <table>
         <tr>
             <td><input th:field="*{title}" placeholder="제목입력"></td>
-            <td><input th:field="*{poster}" placeholder="작성자 입력"></td>
+            <td>
+                <input th:if="${loginMember == null}" th:field="*{poster}" placeholder="작성자 입력">
+                <span th:if="${loginMember != null}" th:text="${loginMember.nickname} + ' 님'"></span>
+            </td>
         </tr>
 
         <tr>
