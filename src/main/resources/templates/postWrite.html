@@ -21,6 +21,7 @@
 
     </table>
     <button type="submit">작성</button>
+    <input type="password" th:if="${loginMember == null}" th:field="*{guestPassword}" placeholder="비밀번호 입력">
 </form>
 </body>
 </html>

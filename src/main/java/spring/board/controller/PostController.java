@@ -2,11 +2,13 @@ package spring.board.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import spring.board.domain.Comment;
+import spring.board.domain.Member;
 import spring.board.domain.Post;
 import spring.board.service.CommentService;
 import spring.board.service.MemberService;
@@ -17,12 +19,14 @@ public class PostController {
     private final PostService postService;
     private final CommentService commentService;
     private final MemberService memberService;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public PostController(PostService postService, CommentService commentService, MemberService memberService) {
+    public PostController(PostService postService, CommentService commentService, MemberService memberService, PasswordEncoder passwordEncoder) {
         this.postService = postService;
         this.commentService=commentService;
         this.memberService = memberService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @RequestMapping("/")
@@ -75,8 +79,11 @@ public class PostController {
 
         if (loginMember != null) {
             post.setPoster(loginMember.getNickname());
+            Member member = memberService.findById(loginMember.getId());
+            post.setMember(member);
         } else {
             post.setPoster(postdto.getPoster());
+            post.setGuestPassword(passwordEncoder.encode(postdto.getGuestPassword()));
         }
 
         post.setTitle(postdto.getTitle());
@@ -95,8 +102,26 @@ public class PostController {
     }
 
     @PostMapping("/post/delete/{id}")
-    public String delPost(@PathVariable Long id){
-        postService.deletePost(id);
+    public String delPost(@PathVariable Long id, HttpServletRequest request){
+        HttpSession session = request.getSession(false);
+        SessionMember loginMember = null;
+        if (session != null) {
+            loginMember = (SessionMember) session.getAttribute("loginMember");
+        }
+
+        Post post = postService.getPost(id);
+        Member member = post.getMember();
+
+        if(loginMember==null) return "redirect:/login"; //비로그인일 경우 삭제불가
+
+        if (member == null) { //비로그인 작성글이면 회원정보가 없음
+            return "redirect:/";
+        }
+
+        if (loginMember.getId().equals(member.getId())) {
+            postService.deletePost(id);
+        }
+
 
         return "redirect:/";
     }

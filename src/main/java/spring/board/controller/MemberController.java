@@ -80,41 +80,41 @@ public class MemberController {
         return "admin";
     }
 
-    @GetMapping("/getAdmin")
-    public String getAdmin(HttpServletRequest request){
-        HttpSession session=request.getSession(false);
-        if(session==null){
-            return "redirect:/";
-        }
+//    @GetMapping("/getAdmin")
+//    public String getAdmin(HttpServletRequest request){
+//        HttpSession session=request.getSession(false);
+//        if(session==null){
+//            return "redirect:/";
+//        }
+//
+//        SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
+//        Member member=memberRepository.findByLoginId(loginMember.getLoginId()).orElseThrow();
+//        member.setRole("admin");
+//        memberService.join(member);
+//
+//        SessionMember newSessionMember =
+//                new SessionMember(member.getId(), member.getLoginId(), member.getNickname(), member.getRole());
+//        session.setAttribute("loginMember", newSessionMember);
+//        return "redirect:/";
+//    }
 
-        SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
-        Member member=memberRepository.findByLoginId(loginMember.getLoginId()).orElseThrow();
-        member.setRole("admin");
-        memberService.join(member);
-
-        SessionMember newSessionMember =
-                new SessionMember(member.getId(), member.getLoginId(), member.getNickname(), member.getRole());
-        session.setAttribute("loginMember", newSessionMember);
-        return "redirect:/";
-    }
-
-    @GetMapping("/removeAdmin")
-    public String removeAdmin(HttpServletRequest request){
-        HttpSession session=request.getSession(false);
-        if(session==null){
-            return "redirect:/";
-        }
-
-        SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
-        Member member=memberRepository.findByLoginId(loginMember.getLoginId()).orElseThrow();
-        member.setRole("user");
-        memberService.join(member);
-
-        SessionMember newSessionMember =
-                new SessionMember(member.getId(), member.getLoginId(), member.getNickname(), member.getRole());
-        session.setAttribute("loginMember", newSessionMember);
-        return "redirect:/";
-    }
+//    @GetMapping("/removeAdmin")
+//    public String removeAdmin(HttpServletRequest request){
+//        HttpSession session=request.getSession(false);
+//        if(session==null){
+//            return "redirect:/";
+//        }
+//
+//        SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
+//        Member member=memberRepository.findByLoginId(loginMember.getLoginId()).orElseThrow();
+//        member.setRole("user");
+//        memberService.join(member);
+//
+//        SessionMember newSessionMember =
+//                new SessionMember(member.getId(), member.getLoginId(), member.getNickname(), member.getRole());
+//        session.setAttribute("loginMember", newSessionMember);
+//        return "redirect:/";
+//    }
 
 
 

@@ -15,6 +15,7 @@ public class Post {
     private String content;
     private String poster;
     private int viewCount;
+    private String guestPassword;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
@@ -99,5 +100,13 @@ public class Post {
     public void addComment(Comment comment) {
         comments.add(comment);
         comment.setPost(this);
+    }
+
+    public String getGuestPassword() {
+        return guestPassword;
+    }
+
+    public void setGuestPassword(String guestPassword) {
+        this.guestPassword = guestPassword;
     }
 }

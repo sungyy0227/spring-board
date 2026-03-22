@@ -71,6 +71,11 @@ public class MemberService {
                 .orElseThrow(()-> new IllegalArgumentException("회원이 없습니다."));
     }
 
+    public Member findById(Long id){
+        return memberRepository.findById(id)
+                .orElseThrow(()-> new IllegalArgumentException("회원이 없습니다."));
+    }
+
     public void grantAdmin(Long id) {
         Member member=memberRepository.findById(id).orElseThrow();
         member.setRole("admin");

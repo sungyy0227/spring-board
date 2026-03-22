@@ -4,6 +4,7 @@ public class PostDto {
     private String poster;
     private String title;
     private String content;
+    private String guestPassword;
 
     public String getPoster() {
         return poster;
@@ -27,5 +28,13 @@ public class PostDto {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getGuestPassword() {
+        return guestPassword;
+    }
+
+    public void setGuestPassword(String guestPassword) {
+        this.guestPassword = guestPassword;
     }
 }
