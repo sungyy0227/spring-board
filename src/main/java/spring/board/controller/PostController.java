@@ -102,27 +102,10 @@ public class PostController {
     }
 
     @PostMapping("/post/delete/{id}")
-    public String delPost(@PathVariable Long id, HttpServletRequest request){
+    public String delPost(@PathVariable Long id,
+                          HttpServletRequest request,@RequestParam(required = false) String password){
         HttpSession session = request.getSession(false);
-        SessionMember loginMember = null;
-        if (session != null) {
-            loginMember = (SessionMember) session.getAttribute("loginMember");
-        }
-
-        Post post = postService.getPost(id);
-        Member member = post.getMember();
-
-        if(loginMember==null) return "redirect:/login"; //비로그인일 경우 삭제불가
-
-        if (member == null) { //비로그인 작성글이면 회원정보가 없음
-            return "redirect:/";
-        }
-
-        if (loginMember.getId().equals(member.getId())) {
-            postService.deletePost(id);
-        }
-
-
+        postService.deletePost(id, password, session);
         return "redirect:/";
     }
 

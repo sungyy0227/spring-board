@@ -26,6 +26,9 @@
 <div class="deleteAndModify">
 
     <form th:action="@{/post/delete/{id}(id=${post.id})}" method="post">
+        <div th:if="${post.guestPassword != null}">
+            <input type="password" name="password" placeholder="비밀번호 입력">
+        </div>
         <button type="submit">글삭제</button>
     </form>
 

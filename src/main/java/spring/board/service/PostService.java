@@ -1,10 +1,14 @@
 package spring.board.service;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring.board.controller.PostDto;
+import spring.board.controller.SessionMember;
+import spring.board.domain.Member;
 import spring.board.domain.Post;
 //import spring.board.repository.MemoryPostRepository;
 import spring.board.repository.CommentRepository;
@@ -17,11 +21,13 @@ import java.util.List;
 public class PostService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public PostService(PostRepository postRepository, CommentRepository commentRepository){
+    public PostService(PostRepository postRepository, CommentRepository commentRepository, PasswordEncoder passwordEncoder){
         this.commentRepository= commentRepository;
         this.postRepository = postRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public Long join(Post post){
@@ -29,8 +35,36 @@ public class PostService {
         return post.getId();
     }
 
-    public void deletePost(Long id){
-        postRepository.deleteById(id);
+    public void deletePost(Long id, String password, HttpSession session){
+        Post post = postRepository.findById(id).orElseThrow(
+                () -> new IllegalArgumentException("게시물 없음"));
+
+        SessionMember loginUser = null;
+        if (session != null) {
+            loginUser = (SessionMember) session.getAttribute("loginMember");
+        }
+
+
+        if(loginUser!=null && "admin".equals(loginUser.getRole())){ //1. 관리자일 경우 무조건 삭제
+            postRepository.delete(post);
+            return;
+        }
+
+        if(post.getMember()!=null){ //2. 게시물 작성자가 회원일 경우
+            if (loginUser == null) {
+                throw new IllegalArgumentException("삭제 권한 없음");
+            }
+            if(!post.getMember().getId().equals(loginUser.getId())){
+                throw new IllegalArgumentException("삭제 권한 없음");
+            }
+        }
+        else{ //3. 게시물 작성자가 게스트(비로그인)일 경우
+            if(password ==null || !passwordEncoder.matches(password,post.getGuestPassword())){
+                throw new IllegalArgumentException("비밀번호 틀림");
+            }
+        }
+
+        postRepository.delete(post);
     }
 
     public Post getPostAndIncreaseViewCount(long id){
