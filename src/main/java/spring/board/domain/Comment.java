@@ -19,6 +19,10 @@ public class Comment {
         this.commentContent = commentContent;
     }
 
+    public Comment() {
+        
+    }
+
     public Post getPost() {
         return post;
     }
