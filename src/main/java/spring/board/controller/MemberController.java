@@ -80,44 +80,6 @@ public class MemberController {
         return "admin";
     }
 
-//    @GetMapping("/getAdmin")
-//    public String getAdmin(HttpServletRequest request){
-//        HttpSession session=request.getSession(false);
-//        if(session==null){
-//            return "redirect:/";
-//        }
-//
-//        SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
-//        Member member=memberRepository.findByLoginId(loginMember.getLoginId()).orElseThrow();
-//        member.setRole("admin");
-//        memberService.join(member);
-//
-//        SessionMember newSessionMember =
-//                new SessionMember(member.getId(), member.getLoginId(), member.getNickname(), member.getRole());
-//        session.setAttribute("loginMember", newSessionMember);
-//        return "redirect:/";
-//    }
-
-//    @GetMapping("/removeAdmin")
-//    public String removeAdmin(HttpServletRequest request){
-//        HttpSession session=request.getSession(false);
-//        if(session==null){
-//            return "redirect:/";
-//        }
-//
-//        SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
-//        Member member=memberRepository.findByLoginId(loginMember.getLoginId()).orElseThrow();
-//        member.setRole("user");
-//        memberService.join(member);
-//
-//        SessionMember newSessionMember =
-//                new SessionMember(member.getId(), member.getLoginId(), member.getNickname(), member.getRole());
-//        session.setAttribute("loginMember", newSessionMember);
-//        return "redirect:/";
-//    }
-
-
-
     @GetMapping("/admin/members") //중복된 유저나 없는 유저 예외 처리 하기
     public String searchMember(
             @RequestParam(required = false) String keyword,
@@ -125,18 +87,8 @@ public class MemberController {
             Model model
     ) {
 
-        if (keyword != null && !keyword.isBlank()) {
-
-            Member member = null;
-
-            if ("loginId".equals(mode)) {
-                member = memberService.findByLoginId(keyword);
-            } else if ("nickname".equals(mode)) {
-                member = memberService.findByNickname(keyword);
-            }
-            model.addAttribute("member", member);
-        }
-
+        Member member=memberService.findMember(keyword,mode);
+        model.addAttribute("member",member);
         return "admin";
     }
 

@@ -68,12 +68,7 @@ public class PostController {
 
     @PostMapping("/uploadPost")
     public String uploadPost(PostDto postdto, HttpServletRequest request){ //세션 체크는 나중에 인터셉터로 빼기
-        HttpSession session = request.getSession(false);
-        SessionMember loginMember = null;
-
-        if (session != null) {
-            loginMember = (SessionMember) session.getAttribute("loginMember");
-        }
+        SessionMember loginMember = getLoginMember(request);
 
         Post post = new Post();
 
@@ -104,8 +99,8 @@ public class PostController {
     @PostMapping("/post/delete/{id}")
     public String delPost(@PathVariable Long id,
                           HttpServletRequest request,@RequestParam(required = false) String password){
-        HttpSession session = request.getSession(false);
-        postService.deletePost(id, password, session);
+        SessionMember loginMember = getLoginMember(request);
+        postService.deletePost(id, password, loginMember);
         return "redirect:/";
     }
 
@@ -129,9 +124,10 @@ public class PostController {
     @PostMapping("/post/comment/{id}")
     public String addComment(@PathVariable Long id, @ModelAttribute CommentDto commentDto){
         Post post=postService.getPost(id);
-        Comment comment=new Comment();
-        comment.setCommenter(commentDto.getCommenter());
-        comment.setCommentContent(commentDto.getCommentContent());
+        Comment comment = new Comment(
+                commentDto.getCommenter(),
+                commentDto.getCommentContent()
+        );
         post.addComment(comment);
         commentService.addComment(comment);
 
@@ -141,5 +137,16 @@ public class PostController {
     public String deleteComment(@PathVariable Long postId, @PathVariable Long commentId){
         commentService.deleteComment(postId,commentId);
         return "redirect:/post/" + postId;
+    }
+
+
+    private SessionMember getLoginMember(HttpServletRequest request){
+        HttpSession session = request.getSession(false);
+        SessionMember loginMember = null;
+
+        if (session != null) {
+            loginMember = (SessionMember) session.getAttribute("loginMember");
+        }
+        return loginMember;
     }
 }

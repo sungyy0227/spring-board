@@ -85,4 +85,18 @@ public class MemberService {
         Member member=memberRepository.findById(id).orElseThrow();
         member.setRole("user"); //권한을 제거해도 세션이 있는 정보는 새로고침이 안됨
     }
+
+    public Member findMember(String keyword,String mode){
+        Member member=null;
+
+        if(keyword != null && !keyword.isBlank()){
+            if("loginId".equals(mode)){
+                member = memberRepository.findByLoginId(keyword).orElseThrow(() -> new IllegalArgumentException("해당 아이디를 가진 유저가 존재하지 않습니다."));
+            }
+            else if("nickname".equals(mode)){
+                member = memberRepository.findByNickname(keyword).orElseThrow(() -> new IllegalArgumentException("해당 닉네임을 가진 유저가 존재하지 않습니다."));
+            }
+        }
+        return member;
+    }
 }

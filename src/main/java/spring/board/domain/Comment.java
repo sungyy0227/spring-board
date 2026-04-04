@@ -14,6 +14,11 @@ public class Comment {
     @JoinColumn(name = "post_id")
     private Post post;
 
+    public Comment(String commenter, String commentContent) {
+        this.commenter = commenter;
+        this.commentContent = commentContent;
+    }
+
     public Post getPost() {
         return post;
     }
