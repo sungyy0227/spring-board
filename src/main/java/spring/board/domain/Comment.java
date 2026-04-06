@@ -14,13 +14,24 @@ public class Comment {
     @JoinColumn(name = "post_id")
     private Post post;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
+
     public Comment(String commenter, String commentContent) {
         this.commenter = commenter;
         this.commentContent = commentContent;
     }
 
+    public Member getMember() {
+        return member;
+    }
+
+    public void setMember(Member member) {
+        this.member = member;
+    }
+
     public Comment() {
-        
     }
 
     public Post getPost() {

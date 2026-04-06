@@ -37,6 +37,7 @@ public class PostController {
             SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
             model.addAttribute("loginMember", loginMember);
         }
+        
         model.addAttribute("posts", postService.getAllPost());
         return "index";
     }
@@ -49,6 +50,7 @@ public class PostController {
             SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
             model.addAttribute("loginMember", loginMember);
         }
+
         model.addAttribute("postdto",new PostDto());
         return "postWrite";
     }
@@ -67,32 +69,19 @@ public class PostController {
     }
 
     @PostMapping("/uploadPost")
-    public String uploadPost(PostDto postdto, HttpServletRequest request){ //세션 체크는 나중에 인터셉터로 빼기
+    public String uploadPost(PostDto postdto, HttpServletRequest request){
         SessionMember loginMember = getLoginMember(request);
-
-        Post post = new Post();
-
-        if (loginMember != null) {
-            post.setPoster(loginMember.getNickname());
-            Member member = memberService.findById(loginMember.getId());
-            post.setMember(member);
-        } else {
-            post.setPoster(postdto.getPoster());
-            post.setGuestPassword(passwordEncoder.encode(postdto.getGuestPassword()));
-        }
-
-        post.setTitle(postdto.getTitle());
-        post.setContent(postdto.getContent());
-
-        postService.join(post);
+        postService.uploadPost(loginMember,postdto);
         return "redirect:/";
     }
 
     @GetMapping("/post/{id}")
-    public String showPost(@PathVariable Long id,Model model){
+    public String showPost(@PathVariable Long id,Model model, HttpServletRequest request){
         Post post=postService.getPostAndIncreaseViewCount(id);
+        SessionMember loginMember = getLoginMember(request);
         model.addAttribute("post",post);
         model.addAttribute("commentDto",new CommentDto());
+        model.addAttribute("loginMember", loginMember);
         return "postView";
     }
 
@@ -122,20 +111,22 @@ public class PostController {
     }
 
     @PostMapping("/post/comment/{id}")
-    public String addComment(@PathVariable Long id, @ModelAttribute CommentDto commentDto){
-        Post post=postService.getPost(id);
-        Comment comment = new Comment(
-                commentDto.getCommenter(),
-                commentDto.getCommentContent()
-        );
-        post.addComment(comment);
-        commentService.addComment(comment);
+    public String addComment(@PathVariable Long id, @ModelAttribute CommentDto commentDto, HttpServletRequest request){
+        SessionMember loginMember = getLoginMember(request);
+        commentService.addComment(id, commentDto, loginMember);
 
         return "redirect:/post/"+id;
     }
+
     @PostMapping("/post/{postId}/comment/{commentId}/delete")
-    public String deleteComment(@PathVariable Long postId, @PathVariable Long commentId){
-        commentService.deleteComment(postId,commentId);
+    public String deleteComment(@PathVariable Long postId, @PathVariable Long commentId, HttpServletRequest request){
+        SessionMember loginMember = getLoginMember(request);
+        try{
+            commentService.deleteComment(postId, commentId, loginMember);
+        }
+        catch(IllegalArgumentException e){
+
+        }
         return "redirect:/post/" + postId;
     }
 

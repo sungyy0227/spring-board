@@ -54,7 +54,8 @@
 </table>
 <div class="comment-actions">
     <form th:action="@{/post/comment/{id}(id=${post.id})}" method="post">
-        <input name="commenter" placeholder="작성자">
+        <input th:if="${loginMember == null}" name="commenter" placeholder="작성자">
+        <span th:if="${loginMember != null}" th:text="${loginMember.nickname} + ' 님'"></span>
         <input name="commentContent" placeholder="댓글">
         <button type="submit">댓글등록</button>
     </form>

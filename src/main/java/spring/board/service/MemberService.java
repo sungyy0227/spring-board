@@ -20,11 +20,6 @@ public class MemberService {
         this.memberRepository=memberRepository;
     }
 
-    public Long join(Member member){
-        memberRepository.save(member);
-        return member.getId();
-    }
-
     public void deleteAccount(Long id){
         memberRepository.deleteById(id);
     }
@@ -86,17 +81,23 @@ public class MemberService {
         member.setRole("user"); //권한을 제거해도 세션이 있는 정보는 새로고침이 안됨
     }
 
+
+    //관리자용 서비스
     public Member findMember(String keyword,String mode){
         Member member=null;
-
-        if(keyword != null && !keyword.isBlank()){
-            if("loginId".equals(mode)){
-                member = memberRepository.findByLoginId(keyword).orElseThrow(() -> new IllegalArgumentException("해당 아이디를 가진 유저가 존재하지 않습니다."));
-            }
-            else if("nickname".equals(mode)){
-                member = memberRepository.findByNickname(keyword).orElseThrow(() -> new IllegalArgumentException("해당 닉네임을 가진 유저가 존재하지 않습니다."));
-            }
+        if (keyword == null || keyword.isBlank()) {
+            throw new IllegalArgumentException("검색어를 입력해주세요.");
         }
-        return member;
+        if (mode == null || mode.isBlank()) {
+            throw new IllegalArgumentException("검색 조건을 선택해주세요.");
+        }
+        if("loginId".equals(mode)){
+            return member = memberRepository.findByLoginId(keyword).orElseThrow(() -> new IllegalArgumentException("해당 아이디를 가진 유저가 존재하지 않습니다."));
+            }
+        else if("nickname".equals(mode)){
+            return member = memberRepository.findByNickname(keyword).orElseThrow(() -> new IllegalArgumentException("해당 닉네임을 가진 유저가 존재하지 않습니다."));
+        }
+
+        throw new IllegalArgumentException("올바르지 않은 검색 조건입니다.");
     }
 }

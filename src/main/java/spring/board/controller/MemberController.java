@@ -86,9 +86,13 @@ public class MemberController {
             @RequestParam(required = false) String mode,
             Model model
     ) {
-
-        Member member=memberService.findMember(keyword,mode);
-        model.addAttribute("member",member);
+        try{
+            Member member=memberService.findMember(keyword,mode);
+            model.addAttribute("member",member);
+        }
+        catch (IllegalArgumentException e){
+            model.addAttribute("errorMessage", e.getMessage());
+        }
         return "admin";
     }
 

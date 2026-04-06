@@ -7,8 +7,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring.board.controller.PostDto;
 import spring.board.controller.SessionMember;
+import spring.board.domain.Member;
 import spring.board.domain.Post;
 import spring.board.repository.CommentRepository;
+import spring.board.repository.MemberRepository;
 import spring.board.repository.PostRepository;
 
 import java.util.List;
@@ -19,12 +21,14 @@ public class PostService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MemberRepository memberRepository;
 
     @Autowired
-    public PostService(PostRepository postRepository, CommentRepository commentRepository, PasswordEncoder passwordEncoder){
+    public PostService(PostRepository postRepository, CommentRepository commentRepository, PasswordEncoder passwordEncoder, MemberRepository memberRepository){
         this.commentRepository= commentRepository;
         this.postRepository = postRepository;
         this.passwordEncoder = passwordEncoder;
+        this.memberRepository = memberRepository;
     }
 
     public Long join(Post post){
@@ -66,9 +70,8 @@ public class PostService {
     }
 
     public Post getPost(long id){
-        postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 객체가 존재하지 않습니다"));
-        return postRepository.findById(id).get();
+        return postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다"));
     }
 
     public List<Post> getAllPost(){
@@ -92,5 +95,24 @@ public class PostService {
 
         postRepository.deleteAllNative();
         postRepository.resetId();
+    }
+
+    public void uploadPost(SessionMember loginMember, PostDto postDto) {
+        Post post = new Post();
+
+        if (loginMember!=null){
+            post.setPoster(loginMember.getNickname());
+            Member member = memberRepository.findById(loginMember.getId()).orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
+            post.setMember(member);
+        }
+        else{
+            post.setPoster(postDto.getPoster());
+            post.setGuestPassword(passwordEncoder.encode(postDto.getGuestPassword()));
+        }
+
+        post.setTitle(postDto.getTitle());
+        post.setContent(postDto.getContent());
+
+        postRepository.save(post);
     }
 }

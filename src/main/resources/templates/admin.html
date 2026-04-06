@@ -32,8 +32,8 @@
                 <button type="submit">관리자 권한 제거</button>
             </form></td>
         </tr>
-        <tr th:if="${member == null}">
-            <td colspan="3">회원이 존재하지 않습니다.</td>
+        <tr th:if="${member == null and errorMessage != null}">
+            <td colspan="3" th:text="${errorMessage}"></td>
         </tr>
     </table>
 
