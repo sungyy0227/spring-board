@@ -2,6 +2,7 @@ package spring.board.service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring.board.controller.CommentDto;
 import spring.board.controller.SessionMember;
@@ -18,12 +19,14 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public CommentService(CommentRepository commentRepository, PostRepository postRepository, MemberRepository memberRepository){
+    public CommentService(CommentRepository commentRepository, PostRepository postRepository, MemberRepository memberRepository, PasswordEncoder passwordEncoder){
         this.commentRepository=commentRepository;
         this.postRepository = postRepository;
         this.memberRepository = memberRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public Long addComment(Long id, CommentDto commentDto, SessionMember loginMember) {
@@ -38,6 +41,7 @@ public class CommentService {
         }
         else{
             comment.setCommenter(commentDto.getCommenter());
+            comment.setGuestPassword(passwordEncoder.encode(commentDto.getGuestRawPassword()));
         }
         comment.setCommentContent(commentDto.getCommentContent());
         post.addComment(comment);
@@ -46,30 +50,38 @@ public class CommentService {
         return comment.getId();
     }
 
-    public void deleteComment(Long postId,Long commentId, SessionMember loginMember){
+    public void deleteComment(Long postId,Long commentId, SessionMember loginMember, String guestRawPassword){
         Comment comment=commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException(commentId+"번 댓글이 존재하지 않습니다."));
 
         Long ownerPostId=comment.getPost().getId();
+
         //게시물, 댓글이 같은 게시물에서 왔는지 확인
         if(!ownerPostId.equals(postId)){
             throw new IllegalArgumentException("postId랑 commentId가 일치하지 않습니다. postId="+postId+"commentId="+commentId);
         }
-        //로그인 상태확인
-        if(loginMember==null) {
-            throw new IllegalArgumentException("로그인 상태가 아닙니다.");
-        }
-        //관리자 여부 확인
-        if ("admin".equals(loginMember.getRole())) {
+        //관리자일 경우 바로 삭제
+        if(loginMember!=null && "admin".equals(loginMember.getRole())){
             commentRepository.delete(comment);
             return;
         }
-        //댓글 작성자랑 삭제 요청 사용자 일치 여부 확인
-        if (comment.getMember() == null || !loginMember.getId().equals(comment.getMember().getId())) {
-            throw new IllegalArgumentException("해당 댓글의 작성자가 아닙니다.");
+
+        if(comment.getMember() != null ){
+            //로그인상태고 작성자랑 삭제 요청 유저가 같은지 확인
+            if(loginMember!=null && comment.getMember().getId().equals(loginMember.getId())){
+                commentRepository.delete(comment);
+                return;
+            }
+        }
+        else{
+            //게스트고 댓글 작성할때 입력한 패스워드랑 삭제할때 입력한 패스워드 같은지 확인
+            if(passwordEncoder.matches(guestRawPassword, comment.getGuestPassword())){
+                commentRepository.delete(comment);
+                return;
+            }
         }
 
+        throw new IllegalArgumentException("해당 댓글을 삭제하지 못했습니다.");
 
-        commentRepository.delete(comment);
     }
 }

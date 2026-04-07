@@ -4,6 +4,15 @@ public class CommentDto {
     private Long postId;
     private String commenter;
     private String commentContent;
+    private String guestRawPassword;
+
+    public String getGuestRawPassword() {
+        return guestRawPassword;
+    }
+
+    public void setGuestRawPassword(String guestRawPassword) {
+        this.guestRawPassword = guestRawPassword;
+    }
 
     public Long getPostId() {
         return postId;

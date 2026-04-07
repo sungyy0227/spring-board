@@ -9,6 +9,7 @@ public class Comment {
     private Long id;
     private String commenter;
     private String commentContent;
+    private String guestPassword;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
@@ -32,6 +33,14 @@ public class Comment {
     }
 
     public Comment() {
+    }
+
+    public String getGuestPassword() {
+        return guestPassword;
+    }
+
+    public void setGuestPassword(String guestPassword) {
+        this.guestPassword = guestPassword;
     }
 
     public Post getPost() {

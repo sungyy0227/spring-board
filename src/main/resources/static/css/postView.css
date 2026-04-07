@@ -39,3 +39,20 @@ td:nth-child(2), th:nth-child(2) {
 td:nth-child(3), th:nth-child(3) {
   text-align: right;
 }
+/* 댓글 삭제 영역 (3번째 칸) */
+td:nth-child(3) {
+  width: 150px; /* 넉넉하게 확보 */
+}
+
+/* 삭제 form 가로 정렬 */
+td:nth-child(3) form {
+  display: flex;
+  justify-content: flex-end; /* 오른쪽 정렬 */
+  align-items: center;
+  gap: 6px; /* input이랑 버튼 간격 */
+}
+
+/* 비밀번호 input 크기 줄이기 */
+td:nth-child(3) input[type="password"] {
+  width: 90px;
+}

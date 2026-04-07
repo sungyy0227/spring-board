@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import spring.board.domain.Comment;
 import spring.board.domain.Member;
 import spring.board.domain.Post;
@@ -119,13 +120,14 @@ public class PostController {
     }
 
     @PostMapping("/post/{postId}/comment/{commentId}/delete")
-    public String deleteComment(@PathVariable Long postId, @PathVariable Long commentId, HttpServletRequest request){
+    public String deleteComment(@PathVariable Long postId, @PathVariable Long commentId, RedirectAttributes redirectAttributes,
+                                HttpServletRequest request, @RequestParam(required = false) String guestRawPassword){
         SessionMember loginMember = getLoginMember(request);
         try{
-            commentService.deleteComment(postId, commentId, loginMember);
+            commentService.deleteComment(postId, commentId, loginMember, guestRawPassword);
         }
         catch(IllegalArgumentException e){
-
+            redirectAttributes.addFlashAttribute("commentError", e.getMessage());
         }
         return "redirect:/post/" + postId;
     }

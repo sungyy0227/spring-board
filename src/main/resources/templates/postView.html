@@ -28,8 +28,8 @@
     <form th:action="@{/post/delete/{id}(id=${post.id})}" method="post">
         <div th:if="${post.guestPassword != null}">
             <input type="password" name="password" placeholder="비밀번호 입력">
+            <button type="submit">글삭제</button>
         </div>
-        <button type="submit">글삭제</button>
     </form>
 
     <form th:action="@{/post/modify/{id}(id=${post.id})}" method="get">
@@ -48,6 +48,7 @@
         <td th:text="${comment.commentContent}">내용</td>
         <td>
         <form th:action="@{/post/{postId}/comment/{commentId}/delete(postId=${post.id}, commentId=${comment.id})}" method="post">
+            <input th:if="${comment.member == null}" type="password" placeholder="비밀번호" name="guestRawPassword">
             <button type="submit">X</button>
         </form></td>
     </tr>
@@ -57,6 +58,7 @@
         <input th:if="${loginMember == null}" name="commenter" placeholder="작성자">
         <span th:if="${loginMember != null}" th:text="${loginMember.nickname} + ' 님'"></span>
         <input name="commentContent" placeholder="댓글">
+        <input type="password" th:if="${loginMember == null}" name="guestRawPassword" placeholder="비밀번호">
         <button type="submit">댓글등록</button>
     </form>
 </div>
