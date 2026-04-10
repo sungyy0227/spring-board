@@ -115,4 +115,9 @@ public class PostService {
 
         postRepository.save(post);
     }
+
+    //유저 조회(글, 댓글)
+    public List<Post> findPostsByMemberId(Long memberId){
+        return postRepository.findByMemberId(memberId);
+    }
 }

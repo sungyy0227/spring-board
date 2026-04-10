@@ -13,6 +13,8 @@ import spring.board.repository.CommentRepository;
 import spring.board.repository.MemberRepository;
 import spring.board.repository.PostRepository;
 
+import java.util.List;
+
 @Service
 @Transactional
 public class CommentService {
@@ -83,5 +85,9 @@ public class CommentService {
 
         throw new IllegalArgumentException("해당 댓글을 삭제하지 못했습니다.");
 
+    }
+
+    public List<Comment> findCommentsByMemberId(Long memberId){
+        return commentRepository.findByMemberId(memberId);
     }
 }

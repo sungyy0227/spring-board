@@ -6,18 +6,24 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring.board.controller.MemberDto;
 import spring.board.domain.Member;
+import spring.board.domain.Post;
 import spring.board.repository.MemberRepository;
+import spring.board.repository.PostRepository;
+
+import java.util.List;
 
 @Service
 @Transactional
 public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PostRepository postRepository;
 
     @Autowired
-    MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder){
+    MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, PostRepository postRepository){
         this.passwordEncoder=passwordEncoder;
         this.memberRepository=memberRepository;
+        this.postRepository = postRepository;
     }
 
     public void deleteAccount(Long id){
@@ -58,17 +64,17 @@ public class MemberService {
 
     public Member findByLoginId(String keyword){
         return memberRepository.findByLoginId(keyword)
-                .orElseThrow(()-> new IllegalArgumentException("회원이 없습니다."));
+                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 회원입니다."));
     }
 
     public Member findByNickname(String keyword){
         return memberRepository.findByNickname(keyword)
-                .orElseThrow(()-> new IllegalArgumentException("회원이 없습니다."));
+                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 회원입니다."));
     }
 
     public Member findById(Long id){
         return memberRepository.findById(id)
-                .orElseThrow(()-> new IllegalArgumentException("회원이 없습니다."));
+                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 회원입니다."));
     }
 
     public void grantAdmin(Long id) {

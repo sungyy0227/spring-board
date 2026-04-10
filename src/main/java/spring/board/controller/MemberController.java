@@ -10,11 +10,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import spring.board.domain.Comment;
 import spring.board.domain.Member;
+import spring.board.domain.Post;
 import spring.board.repository.MemberRepository;
 import spring.board.service.CommentService;
 import spring.board.service.MemberService;
 import spring.board.service.PostService;
+
+import java.util.List;
 
 @Controller
 public class MemberController {
@@ -99,13 +103,32 @@ public class MemberController {
     @PostMapping("/admin/members/{id}/grant-admin")
     public String grandAdmin(@PathVariable Long id){
         memberService.grantAdmin(id);
-        return "redirect:/admin";
+        return "redirect:/admin/members/{id}";
     }
 
     @PostMapping("/admin/members/{id}/remove-admin")
     public String removeAdmin(@PathVariable Long id){
         memberService.removeAdmin(id);
-        return "redirect:/admin";
+        return "redirect:/admin/members/{id}";
     }
+
+    @GetMapping("/admin/members/{id}")
+    public String memberDetail(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes){
+        try {
+            Member member = memberService.findById(id);
+            List<Post> posts = postService.findPostsByMemberId(id);
+            List<Comment> comments = commentService.findCommentsByMemberId(id);
+
+            model.addAttribute("member", member);
+            model.addAttribute("posts", posts);
+            model.addAttribute("comments", comments);
+
+            return "memberDetail";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/admin";
+        }
+    }
+
 
 }

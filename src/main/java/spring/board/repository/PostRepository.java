@@ -27,4 +27,6 @@ public interface PostRepository extends JpaRepository<Post,Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = "ALTER TABLE POST ALTER COLUMN ID RESTART WITH 1", nativeQuery = true)
     void resetId();
+
+    List<Post> findByMemberId(Long memberId);
 }

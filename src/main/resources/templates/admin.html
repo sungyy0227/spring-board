@@ -17,25 +17,26 @@
     <button type="submit" name="mode" value="nickname">닉네임으로 조회</button>
 </form>
 
-    <table>
-        <tr>
-            <td>이름</td>
-            <td>관리자권한생성</td>
-            <td>관리자권한제거</td>
-        </tr>
-        <tr th:if="${member != null}">
-            <td th:text="${member.nickname}"></td>
-            <td><form th:action="@{/admin/members/{id}/grant-admin(id=${member.id})}" method="post">
-                <button type="submit">관리자 권한 지급</button>
-            </form></td>
-            <td><form th:action="@{/admin/members/{id}/remove-admin(id=${member.id})}" method="post">
-                <button type="submit">관리자 권한 제거</button>
-            </form></td>
-        </tr>
-        <tr th:if="${member == null and errorMessage != null}">
-            <td colspan="3" th:text="${errorMessage}"></td>
-        </tr>
-    </table>
+<table>
+    <tr>
+        <td>이름</td>
+        <td>상세보기</td>
+    </tr>
+
+    <tr th:if="${member != null}">
+        <td th:text="${member.nickname}"></td>
+
+        <td>
+            <a th:href="@{/admin/members/{id}(id=${member.id})}">
+                <button type="button">상세보기</button>
+            </a>
+        </td>
+    </tr>
+
+    <tr th:if="${member == null and errorMessage != null}">
+        <td colspan="2" th:text="${errorMessage}"></td>
+    </tr>
+</table>
 
 </body>
 </html>
