@@ -2,15 +2,15 @@ package spring.board.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import spring.board.domain.Comment;
-import spring.board.domain.Member;
 import spring.board.domain.Post;
+import spring.board.dto.CommentDto;
+import spring.board.dto.PostDto;
+import spring.board.dto.SessionMember;
 import spring.board.service.CommentService;
 import spring.board.service.MemberService;
 import spring.board.service.PostService;
@@ -20,14 +20,12 @@ public class PostController {
     private final PostService postService;
     private final CommentService commentService;
     private final MemberService memberService;
-    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public PostController(PostService postService, CommentService commentService, MemberService memberService, PasswordEncoder passwordEncoder) {
+    public PostController(PostService postService, CommentService commentService, MemberService memberService) {
         this.postService = postService;
         this.commentService=commentService;
         this.memberService = memberService;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @RequestMapping("/")

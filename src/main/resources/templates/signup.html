@@ -11,5 +11,6 @@
     <input type="text" name="nickname" placeholder="닉네임"><br>
     <button type="submit">회원가입</button>
 </form>
+<div th:if="${errorMessage}" th:text="${errorMessage}" style="color:red;"></div>
 </body>
 </html>

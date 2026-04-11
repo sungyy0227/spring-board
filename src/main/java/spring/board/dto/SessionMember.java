@@ -1,4 +1,4 @@
-package spring.board.controller;
+package spring.board.dto;
 
 public class SessionMember {
     private Long id;

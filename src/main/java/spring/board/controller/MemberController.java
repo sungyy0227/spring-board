@@ -13,6 +13,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import spring.board.domain.Comment;
 import spring.board.domain.Member;
 import spring.board.domain.Post;
+import spring.board.dto.LoginDto;
+import spring.board.dto.MemberDto;
+import spring.board.dto.SessionMember;
 import spring.board.repository.MemberRepository;
 import spring.board.service.CommentService;
 import spring.board.service.MemberService;
@@ -48,9 +51,16 @@ public class MemberController {
     }
 
     @PostMapping("/login/signup")
-    public String signup(MemberDto memberDto){
-        memberService.signup(memberDto);
-        return "redirect:/login";
+    public String signup(MemberDto memberDto,RedirectAttributes redirectAttributes){
+        try{
+            memberService.signup(memberDto);
+            redirectAttributes.addFlashAttribute("successMessage", "회원가입이 완료되었습니다.");
+            return "redirect:/login";
+        }
+        catch (IllegalArgumentException e){
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/login/signup";
+        }
     }
 
     @PostMapping("/login")

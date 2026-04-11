@@ -4,8 +4,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import spring.board.controller.CommentDto;
-import spring.board.controller.SessionMember;
+import spring.board.dto.CommentDto;
+import spring.board.dto.SessionMember;
 import spring.board.domain.Comment;
 import spring.board.domain.Member;
 import spring.board.domain.Post;
@@ -87,6 +87,7 @@ public class CommentService {
 
     }
 
+    //유저가 쓴 댓글들 조회
     public List<Comment> findCommentsByMemberId(Long memberId){
         return commentRepository.findByMemberId(memberId);
     }

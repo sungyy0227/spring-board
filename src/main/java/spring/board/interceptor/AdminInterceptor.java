@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.servlet.HandlerInterceptor;
-import spring.board.controller.SessionMember;
+import spring.board.dto.SessionMember;
 
 public class AdminInterceptor implements HandlerInterceptor {
 

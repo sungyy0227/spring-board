@@ -11,5 +11,6 @@
         <button type="submit">로그인</button>
     </form>
 <a th:href="@{/login/signup}">회원가입</a>
+        <div th:if="${successMessage}" th:text="${successMessage}" style="color:green;"></div>
 </body>
 </html>

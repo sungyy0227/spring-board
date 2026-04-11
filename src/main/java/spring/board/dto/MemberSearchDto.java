@@ -1,4 +1,4 @@
-package spring.board.controller;
+package spring.board.dto;
 
 public class MemberSearchDto {
     private Long id;

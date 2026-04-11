@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import spring.board.controller.PostDto;
-import spring.board.controller.SessionMember;
+import spring.board.dto.PostDto;
+import spring.board.dto.SessionMember;
 import spring.board.domain.Member;
 import spring.board.domain.Post;
 import spring.board.repository.CommentRepository;
@@ -116,7 +116,7 @@ public class PostService {
         postRepository.save(post);
     }
 
-    //유저 조회(글, 댓글)
+    //유저가 쓴 글들 조회
     public List<Post> findPostsByMemberId(Long memberId){
         return postRepository.findByMemberId(memberId);
     }

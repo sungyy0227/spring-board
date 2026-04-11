@@ -4,13 +4,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import spring.board.controller.MemberDto;
+import spring.board.dto.MemberDto;
 import spring.board.domain.Member;
-import spring.board.domain.Post;
 import spring.board.repository.MemberRepository;
 import spring.board.repository.PostRepository;
-
-import java.util.List;
 
 @Service
 @Transactional
@@ -37,7 +34,7 @@ public class MemberService {
 
         if(memberRepository.existsByNickname(memberDto.getNickname())){
             throw new IllegalArgumentException("이미 사용중인 닉네임 입니다.");
-        }
+        }   
 
         Member member=new Member();
         member.setLoginId(memberDto.getLoginId());
@@ -55,9 +52,9 @@ public class MemberService {
 
     public Member login(String loginId, String rawPassword){
         Member member=memberRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new IllegalArgumentException("아이디 틀림")); //예외를 추후 "아이디 또는 비밀번호가 올바르지 않습니다." 로 바꿀것
+                .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다."));
         if(!passwordEncoder.matches(rawPassword, member.getPassword())){
-            throw new IllegalArgumentException("비밀번호 틀림"); //예외를 추후 "아이디 또는 비밀번호가 올바르지 않습니다."로 바꿀것
+            throw new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.");
         }
         return member;
     }
