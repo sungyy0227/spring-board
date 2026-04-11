@@ -8,12 +8,15 @@
 <form th:action="@{/post/modifyRequest/{id}(id=${post.id})}" th:object="${postdto}" method="post">
     <table>
         <tr>
-            <td><input th:field="*{title}" placeholder="제목입력" value="${post.title}"></td>
-            <td><input th:field="*{poster}" placeholder="작성자 입력" value="${post.poster}"></td>
+            <td><input th:field="*{title}" placeholder="제목입력"></td>
+            <td>
+                <input th:if="${post.member == null}" th:field="*{poster}" placeholder="작성자 입력">
+                <span th:if="${post.member != null}" th:text="${post.poster} + ' 님'"></span>
+            </td>
         </tr>
 
         <tr>
-            <td colspan="2"><textarea th:field="*{content}" placeholder="내용 입력">[[${post.content}]]</textarea></td>
+            <td colspan="2"><textarea th:field="*{content}" placeholder="내용 입력"></textarea></td>
         </tr>
 
     </table>

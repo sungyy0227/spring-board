@@ -83,10 +83,12 @@ public class PostService {
     }
 
     public void modifyPost(long id, PostDto postdto){
-        Post post=postRepository.findById(id).orElseThrow();
+        Post post = postRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
+        if(post.getMember()==null){
+            post.setPoster(postdto.getPoster());
+        }
         post.setTitle(postdto.getTitle());
         post.setContent(postdto.getContent());
-        post.setPoster(postdto.getPoster());
     }
 
     public void deleteAllAndResetId() {
@@ -120,4 +122,37 @@ public class PostService {
     public List<Post> findPostsByMemberId(Long memberId){
         return postRepository.findByMemberId(memberId);
     }
+
+    //수정 페이지 요청용 권한 확인
+    public void validateUpdatePageAccess(SessionMember loginMember, Long postId, String guestPassword){
+        //회원일경우
+        Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
+        if(post.getMember()!=null){
+            if(loginMember == null || !loginMember.getId().equals(post.getMember().getId())){
+                throw new IllegalArgumentException("해당 게시물에 대한 수정 권한이 존재하지 않습니다.");
+            }
+        }//비회원일경우
+        else{
+            if(guestPassword==null || !passwordEncoder.matches(guestPassword,post.getGuestPassword())){
+                throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            }
+        }
+    }
+
+    //수정 요청용 권한 확인
+    public void validateUpdatePermission(SessionMember loginMember,Long postId, Long verifiedPostId){
+        Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
+        //회원일경우
+        if(post.getMember()!=null){
+            if(loginMember == null || !loginMember.getId().equals(post.getMember().getId())){
+                throw new IllegalArgumentException("해당 게시물에 대한 수정 권한이 존재하지 않습니다.");
+            }
+        }//비회원일경우
+        else{
+            if(verifiedPostId==null || !post.getId().equals(verifiedPostId)){
+                throw new IllegalArgumentException("해당 게시물에 대한 수정 권한이 존재하지 않습니다.");
+            }
+        }
+    }
+
 }

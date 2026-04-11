@@ -92,19 +92,35 @@ public class PostController {
         return "redirect:/";
     }
 
-    @GetMapping("/post/modify/{id}")
-    public String modifyPageRequestPost(@PathVariable Long id, Model model){
+    @PostMapping("/post/modify/{id}")
+    public String modifyPageRequestPost(@PathVariable Long id, Model model, HttpServletRequest request, @RequestParam(required = false) String password){
+        SessionMember loginMember = getLoginMember(request);
+        postService.validateUpdatePageAccess(loginMember, id, password);
+        if (loginMember == null) {
+            HttpSession session = request.getSession();
+            session.setAttribute("guestEditVerifiedPostId", id);
+        }
+
         Post post=postService.getPost(id);
         PostDto postdto=new PostDto();
 
+        model.addAttribute("loginMember", loginMember);
         model.addAttribute("post", post);
         model.addAttribute("postdto", postdto);
         return "postModify";
     }
 
     @PostMapping("/post/modifyRequest/{id}")
-    public String modifyRequestPost(@PathVariable Long id, PostDto postdto){
-        postService.modifyPost(id,postdto);
+    public String modifyRequestPost(@PathVariable Long id, PostDto postdto, HttpServletRequest request){
+        HttpSession session = request.getSession(false);
+        SessionMember loginMember = getLoginMember(request);
+        Long verifiedPostId = null;
+        if (session != null) {
+            verifiedPostId = (Long) session.getAttribute("guestEditVerifiedPostId");
+        }
+        postService.validateUpdatePermission(loginMember,id,verifiedPostId);
+        postService.modifyPost(id, postdto);
+        if(verifiedPostId!=null) session.removeAttribute("guestEditVerifiedPostId");
 
         return "redirect:/post/"+id;
     }
