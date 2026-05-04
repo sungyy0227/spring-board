@@ -1,10 +1,12 @@
 package spring.board.dto;
 
+import spring.board.domain.Role;
+
 public class MemberDto {
     private String loginId;
     private String password;
     private String nickname;
-    private String role;
+    private Role role;
 
     public String getLoginId() {
         return loginId;
@@ -30,11 +32,11 @@ public class MemberDto {
         this.nickname = nickname;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 }

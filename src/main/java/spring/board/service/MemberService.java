@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import spring.board.domain.Role;
 import spring.board.dto.MemberDto;
 import spring.board.domain.Member;
 import spring.board.repository.MemberRepository;
@@ -16,7 +17,6 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final PostRepository postRepository;
 
-    @Autowired
     MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, PostRepository postRepository){
         this.passwordEncoder=passwordEncoder;
         this.memberRepository=memberRepository;
@@ -40,7 +40,7 @@ public class MemberService {
         member.setLoginId(memberDto.getLoginId());
         member.setPassword(passwordEncoder.encode(memberDto.getPassword()));
         member.setNickname(memberDto.getNickname());
-        member.setRole("user");
+        member.setRole(Role.USER);
 
         memberRepository.save(member);
     }
@@ -76,12 +76,12 @@ public class MemberService {
 
     public void grantAdmin(Long id) {
         Member member=memberRepository.findById(id).orElseThrow();
-        member.setRole("admin");
+        member.setRole(Role.ADMIN);
     }
 
     public void removeAdmin(Long id){
         Member member=memberRepository.findById(id).orElseThrow();
-        member.setRole("user"); //권한을 제거해도 세션이 있는 정보는 새로고침이 안됨
+        member.setRole(Role.USER); //TODO: 권한을 제거해도 세션이 있는 정보는 새로고침이 안됨
     }
 
 

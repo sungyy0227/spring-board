@@ -15,8 +15,8 @@ public class Member {
     @Column(unique = true)
     private String nickname;
 
-    private String role;
-
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
 
     public Long getId() {
@@ -51,11 +51,15 @@ public class Member {
         this.nickname = nickname;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
+    }
+
+    public boolean isAdmin() {
+        return this.role == Role.ADMIN;
     }
 }

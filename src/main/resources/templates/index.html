@@ -20,7 +20,7 @@
         <div th:if="${loginMember != null}">
             <span th:text="${loginMember.nickname} + ' 님'"></span>
 
-            <div th:if="${loginMember.role == 'admin'}">
+            <div th:if="${loginMember.isAdmin()}">
                 <form th:action="@{/admin}"><button>관리자페이지</button></form>
             </div>
 

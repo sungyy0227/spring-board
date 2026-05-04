@@ -121,12 +121,12 @@
     </table>
 
     <div class="role-form">
-        <form th:if="${member.role != 'admin'}"
+        <form th:if="${!member.isAdmin()}"
               th:action="@{/admin/members/{id}/grant-admin(id=${member.id})}" method="post">
             <button type="submit" class="role-btn admin-btn">ADMIN 권한 부여</button>
         </form>
 
-        <form th:if="${member.role == 'admin'}"
+        <form th:if="${member.isAdmin()}"
               th:action="@{/admin/members/{id}/remove-admin(id=${member.id})}" method="post">
             <button type="submit" class="role-btn user-btn">ADMIN 권한 해제</button>
         </form>

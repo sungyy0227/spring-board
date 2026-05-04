@@ -23,7 +23,6 @@ public class PostService {
     private final PasswordEncoder passwordEncoder;
     private final MemberRepository memberRepository;
 
-    @Autowired
     public PostService(PostRepository postRepository, CommentRepository commentRepository, PasswordEncoder passwordEncoder, MemberRepository memberRepository){
         this.commentRepository= commentRepository;
         this.postRepository = postRepository;
@@ -40,7 +39,7 @@ public class PostService {
         Post post = postRepository.findById(id).orElseThrow(
                 () -> new IllegalArgumentException("게시물 없음"));
 
-        if(loginMember!=null && "admin".equals(loginMember.getRole())){ //1. 관리자일 경우 무조건 삭제
+        if(loginMember!=null && loginMember.isAdmin()){ //1. 관리자일 경우 무조건 삭제
             postRepository.delete(post);
             return;
         }

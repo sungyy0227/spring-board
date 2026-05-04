@@ -23,7 +23,6 @@ public class CommentService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired
     public CommentService(CommentRepository commentRepository, PostRepository postRepository, MemberRepository memberRepository, PasswordEncoder passwordEncoder){
         this.commentRepository=commentRepository;
         this.postRepository = postRepository;
@@ -63,7 +62,7 @@ public class CommentService {
             throw new IllegalArgumentException("postId랑 commentId가 일치하지 않습니다. postId="+postId+"commentId="+commentId);
         }
         //관리자일 경우 바로 삭제
-        if(loginMember!=null && "admin".equals(loginMember.getRole())){
+        if(loginMember!=null && loginMember.isAdmin()){
             commentRepository.delete(comment);
             return;
         }

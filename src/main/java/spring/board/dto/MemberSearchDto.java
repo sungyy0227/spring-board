@@ -1,12 +1,14 @@
 package spring.board.dto;
 
+import spring.board.domain.Role;
+
 public class MemberSearchDto {
     private Long id;
     private String loginId;
     private String nickname;
-    private String role;
+    private Role role;
 
-    public MemberSearchDto(Long id, String loginId, String nickname, String role) {
+    public MemberSearchDto(Long id, String loginId, String nickname, Role role) {
         this.id = id;
         this.loginId = loginId;
         this.nickname = nickname;
@@ -41,11 +43,11 @@ public class MemberSearchDto {
         this.nickname = nickname;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 }

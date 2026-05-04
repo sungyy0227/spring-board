@@ -33,13 +33,13 @@ Spring Boot로 구현한 게시판 프로젝트입니다.
 - SessionMember를 활용한 세션 기반 로그인 상태 관리
 - Interceptor를 이용한 관리자 페이지 접근 제어
 - 전역 예외 처리(`@ControllerAdvice`)를 통해 공통 에러 처리 로직 분리
+- 수정 페이지 접근 시 비밀번호 노출 방지를 위해 GET 요청 대신 POST 요청을 사용하도록 구조 변경
 
 ---
 
 ## 🔄 개선 예정
 
 - RESTful 구조로 리팩토링 (POST → DELETE / PATCH)
-- role enum으로 변경
 
 ---
 

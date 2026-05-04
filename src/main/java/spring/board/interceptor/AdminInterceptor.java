@@ -23,7 +23,7 @@ public class AdminInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        if (!"admin".equals(loginMember.getRole())) {
+        if (!loginMember.isAdmin()) {
             response.sendRedirect("/");
             return false;
         }
