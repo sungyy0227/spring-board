@@ -18,6 +18,9 @@ public class Member {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
 
     public Long getId() {
         return id;
@@ -61,5 +64,17 @@ public class Member {
 
     public boolean isAdmin() {
         return this.role == Role.ADMIN;
+    }
+
+    public boolean isWithdrawn(){
+        return this.status == Status.WITHDRAWN;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 }

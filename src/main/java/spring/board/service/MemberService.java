@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring.board.domain.Role;
+import spring.board.domain.Status;
 import spring.board.dto.MemberDto;
 import spring.board.domain.Member;
 import spring.board.repository.MemberRepository;
@@ -41,7 +42,8 @@ public class MemberService {
         member.setPassword(passwordEncoder.encode(memberDto.getPassword()));
         member.setNickname(memberDto.getNickname());
         member.setRole(Role.USER);
-
+        member.setStatus(Status.ACTIVE);
+        
         memberRepository.save(member);
     }
 
@@ -55,6 +57,9 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다."));
         if(!passwordEncoder.matches(rawPassword, member.getPassword())){
             throw new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.");
+        }
+        if(member.isWithdrawn()){
+            throw new IllegalArgumentException("탈퇴한 회원입니다. 로그인이 불가능합니다.");
         }
         return member;
     }
@@ -102,5 +107,16 @@ public class MemberService {
         }
 
         throw new IllegalArgumentException("올바르지 않은 검색 조건입니다.");
+    }
+
+    public void withdraw(String rawPassword,Long id){
+        Member member = memberRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+        if(passwordEncoder.matches(rawPassword, member.getPassword())) {
+            member.setStatus(Status.WITHDRAWN);
+        }
+        else{
+            throw new IllegalArgumentException("비밀번호가 올바르지 않습니다.");
+        }
+
     }
 }

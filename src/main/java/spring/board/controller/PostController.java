@@ -146,7 +146,6 @@ public class PostController {
         return "redirect:/post/" + postId;
     }
 
-
     private SessionMember getLoginMember(HttpServletRequest request){
         HttpSession session = request.getSession(false);
         SessionMember loginMember = null;

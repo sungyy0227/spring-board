@@ -23,7 +23,9 @@
             <div th:if="${loginMember.isAdmin()}">
                 <form th:action="@{/admin}"><button>관리자페이지</button></form>
             </div>
-
+            <form th:action="@{/mypage}" method="get">
+                <button>마이페이지</button>
+            </form>
             <form th:action="@{/logout}" method="post">
                 <button>로그아웃</button>
             </form>

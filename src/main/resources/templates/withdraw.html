@@ -1,0 +1,19 @@
+<html xmlns:th="http://www.thymeleaft.org" lang="ko">
+<head>
+    <title>회원탈퇴</title>
+</head>
+<body>
+<h1>회원탈퇴</h1>
+
+<h3>탈퇴 후에는 로그인이 불가합니다.</h3>
+<h3>작성한 글과 댓글은 사라지지 않습니다.</h3>
+
+<form th:action="@{/mypage/withdraw}" method="post">
+    <input type="password" name="password" placeholder="비밀번호 확인">
+    <button>회원탈퇴</button>
+</form>
+<div th:if="${errorMessage != null}">
+    <h3 th:text="${errorMessage}" style="color: red"></h3>
+</div>
+</body>
+</html>

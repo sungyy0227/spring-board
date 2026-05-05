@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import spring.board.interceptor.AdminInterceptor;
+import spring.board.interceptor.LoginInterceptor;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -12,7 +13,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new AdminInterceptor())
                 .addPathPatterns("/admin", "/admin/**", "/clearAll","/clearPost");
+        registry.addInterceptor(new LoginInterceptor())
+                .addPathPatterns("/mypage", "/mypage/**");
     }
-
-
 }

@@ -10,6 +10,9 @@
         <input type="password" name="password" placeholder="비밀번호"><br><br>
         <button type="submit">로그인</button>
     </form>
+    <div th:if="${loginError != null}">
+        <h3 th:text="${loginError}" style="color: red"></h3>
+    </div>
 <a th:href="@{/login/signup}">회원가입</a>
         <div th:if="${successMessage}" th:text="${successMessage}" style="color:green;"></div>
 </body>

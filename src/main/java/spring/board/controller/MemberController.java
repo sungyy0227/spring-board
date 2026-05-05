@@ -140,5 +140,63 @@ public class MemberController {
         }
     }
 
+    @GetMapping("/mypage")
+    public String myPage(Model model, HttpServletRequest request){
+        SessionMember loginMember = getLoginMember(request);
+        if (loginMember==null){
+            return "redirect:/";
+        }
+        try {
+            Member member = memberService.findById(loginMember.getId());
+            List<Post> posts = postService.findPostsByMemberId(loginMember.getId());
+            List<Comment> comments = commentService.findCommentsByMemberId(loginMember.getId());
 
+            model.addAttribute("member", member);
+            model.addAttribute("posts", posts);
+            model.addAttribute("comments", comments);
+
+        } catch (IllegalArgumentException e) {
+            return "redirect:/";
+        }
+
+        return "mypage";
+    }
+
+
+
+    private SessionMember getLoginMember(HttpServletRequest request){
+        HttpSession session = request.getSession(false);
+        SessionMember loginMember = null;
+
+        if (session != null) {
+            loginMember = (SessionMember) session.getAttribute("loginMember");
+        }
+        return loginMember;
+    }
+
+    @GetMapping("/mypage/withdraw")
+    public String withdrawPageRequest(){
+        return "withdraw";
+    }
+
+    @PostMapping("/mypage/withdraw")
+    public String withdrawMember(@RequestParam String password, HttpServletRequest request,RedirectAttributes redirectAttributes) {
+        SessionMember loginMember = getLoginMember(request);
+
+        if (loginMember == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            memberService.withdraw(password, loginMember.getId());
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/mypage/withdraw";
+        }
+        HttpSession session=request.getSession(false);
+        if(session!= null){
+            session.invalidate();
+        }
+        return "redirect:/";
+    }
 }

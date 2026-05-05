@@ -11,6 +11,10 @@
 
         <div class="meta">
             <em th:text="${post.poster}">작성자</em>
+            <small th:if="${post.member != null and post.member.withdrawn}"
+                   style="color: #888; font-size: 12px;">
+                (탈퇴)
+            </small>
             <span class="viewCount">조회수: [[${post.viewCount}]]</span>
         </div>
     </div>
@@ -52,12 +56,19 @@
 
 <table>
     <colgroup>
-        <col style="width: 8%;">
-        <col style="width: 87%;">
+        <col style="width: 15%;">
+        <col style="width: 80%;">
         <col style="width: 5%;">
     </colgroup>
     <tr th:each="comment: ${post.comments}">
-        <td th:text="${comment.commenter}">작성자</td>
+        <td>
+            <span th:text="${comment.commenter}">작성자</span>
+            <small th:if="${comment.member != null and comment.member.withdrawn}"
+                   style="color: #888; font-size: 12px; white-space: nowrap;">
+                (탈퇴)
+            </small>
+        </td>
+        
         <td th:text="${comment.commentContent}">내용</td>
         <td>
             <form th:action="@{/post/{postId}/comment/{commentId}/delete(postId=${post.id}, commentId=${comment.id})}" method="post">
