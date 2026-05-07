@@ -1,4 +1,4 @@
-table { width: 800px; border-collapse: collapse; table-layout: fixed; }
+table { width: 900px; border-collapse: collapse; table-layout: fixed; }
 th, td { padding: 10px 12px; border-bottom: 1px solid #eee; }
 
 th { text-align: left; }              /* 헤더 왼쪽 */
@@ -21,7 +21,7 @@ td:nth-child(4), th:nth-child(4) {    /* 조회수 */
 
 .menu{
   display: flex;
-  width: 800px;
+  width: 900px;
   align-items: center;
 }
 
@@ -45,4 +45,8 @@ td:nth-child(4), th:nth-child(4) {    /* 조회수 */
 /* form도 block이라 줄바꿈 원인이 될 수 있어서 */
 .right-menu form{
   margin: 0;
+}
+
+.pagination{
+  text-align: center;
 }

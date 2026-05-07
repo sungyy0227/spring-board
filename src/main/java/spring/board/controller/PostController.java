@@ -2,6 +2,7 @@ package spring.board.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.data.domain.Page;
 import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -29,15 +30,33 @@ public class PostController {
     }
 
     @RequestMapping("/")
-    public String home(Model model, HttpServletRequest request){
+    public String home(@RequestParam(defaultValue = "1") int page,Model model, HttpServletRequest request){
         HttpSession session=request.getSession(false);
+        if(page<1) page=1;
+        Page<Post> postPage = postService.getPostPage(page - 1);
+        int currentPage = page;
+        int totalPages = postPage.getTotalPages();
+        int startPage;
+        int endPage;
+
+        if (currentPage <= 9) {
+            startPage = 1;
+            endPage = Math.min(9, totalPages);
+        } else {
+            startPage = ((currentPage - 10) / 10) * 10 + 10;
+            endPage = Math.min(startPage + 9, totalPages);
+        }
+        model.addAttribute("posts", postPage.getContent());
+        model.addAttribute("postPage", postPage);
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
 
         if(session!=null){
             SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
             model.addAttribute("loginMember", loginMember);
         }
-        
-        model.addAttribute("posts", postService.getAllPost());
+
         return "index";
     }
 

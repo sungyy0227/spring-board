@@ -2,6 +2,8 @@ package spring.board.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,6 +27,7 @@ import java.util.List;
 
 @Controller
 public class MemberController {
+    private static final Logger log = LoggerFactory.getLogger(MemberController.class);
     private final PostService postService;
     private final CommentService commentService;
     private final MemberService memberService;
@@ -117,7 +120,7 @@ public class MemberController {
     }
 
     @PostMapping("/admin/members/{id}/remove-admin")
-    public String removeAdmin(@PathVariable Long id){
+    public String removeAdmin(@PathVariable Long id, HttpServletRequest request){
         memberService.removeAdmin(id);
         return "redirect:/admin/members/{id}";
     }

@@ -2,6 +2,7 @@ package spring.board.domain;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +17,8 @@ public class Post {
     private String poster;
     private int viewCount;
     private String guestPassword;
+    private LocalDateTime createdAt;
+
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
@@ -108,5 +111,13 @@ public class Post {
 
     public void setGuestPassword(String guestPassword) {
         this.guestPassword = guestPassword;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

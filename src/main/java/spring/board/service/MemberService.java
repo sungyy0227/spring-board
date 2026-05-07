@@ -8,6 +8,7 @@ import spring.board.domain.Role;
 import spring.board.domain.Status;
 import spring.board.dto.MemberDto;
 import spring.board.domain.Member;
+import spring.board.dto.SessionMember;
 import spring.board.repository.MemberRepository;
 import spring.board.repository.PostRepository;
 

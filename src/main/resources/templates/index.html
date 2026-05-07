@@ -36,8 +36,9 @@
 <table>
     <colgroup>
         <col style="width: 10%;">
-        <col style="width: 60%;">
-        <col style="width: 20%;">
+        <col style="width: 50%;">
+        <col style="width: 15%;">
+        <col style="width: 15%;">
         <col style="width: 10%;">
     </colgroup>
     <thead>
@@ -45,6 +46,7 @@
             <th scope="col">번호</th>
             <th scope="col">제목</th>
             <th scope="col">작성자</th>
+            <th scope="col">날짜</th>
             <th scope="col">조회수</th>
         </tr>
     </thead>
@@ -56,10 +58,38 @@
                th:text="${post.title}">제목</a>
             </td>
             <td th:text="${post.poster}"></td>
+            <td th:text="${#temporals.format(post.createdAt, 'MM-dd HH:mm')}"></td>
             <td th:text="${post.viewCount}"></td>
         </tr>
+    <tr>
+        <td colspan="4"><div class="pagination" th:if="${postPage.totalPages > 0}">
+
+            <!-- 왼쪽 화살표 -->
+            <a class="pageButton"
+               th:if="${startPage > 1}"
+               th:href="@{/(page=${startPage - 1})}">
+                <button type="button">&lt;</button>
+            </a>
+
+            <!-- 페이지 번호 -->
+            <a class="pageButton"
+               th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
+               th:href="@{/(page=${pageNum})}">
+                <button type="button"
+                        th:text="${pageNum}">
+                </button>
+            </a>
+
+            <!-- 오른쪽 화살표 -->
+            <a class="pageButton"
+               th:if="${endPage < postPage.totalPages}"
+               th:href="@{/(page=${endPage + 1})}">
+                <button type="button">&gt;</button>
+            </a>
+
+        </div></td>
+    </tr>
     </tbody>
 </table>
-
 </body>
 </html>

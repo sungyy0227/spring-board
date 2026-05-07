@@ -10,11 +10,12 @@
         <h2 th:text="${post.title}">제목</h2>
 
         <div class="meta">
-            <em th:text="${post.poster}">작성자</em>
+            <span th:text="${post.poster}">작성자</span>
             <small th:if="${post.member != null and post.member.withdrawn}"
                    style="color: #888; font-size: 12px;">
                 (탈퇴)
-            </small>
+            </small>&ensp;
+            <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
             <span class="viewCount">조회수: [[${post.viewCount}]]</span>
         </div>
     </div>

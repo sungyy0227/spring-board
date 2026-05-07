@@ -2,6 +2,9 @@ package spring.board.service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ import spring.board.repository.CommentRepository;
 import spring.board.repository.MemberRepository;
 import spring.board.repository.PostRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -28,11 +32,6 @@ public class PostService {
         this.postRepository = postRepository;
         this.passwordEncoder = passwordEncoder;
         this.memberRepository = memberRepository;
-    }
-
-    public Long join(Post post){
-        postRepository.save(post);
-        return post.getId();
     }
 
     public void deletePost(Long id, String password, SessionMember loginMember){
@@ -113,7 +112,7 @@ public class PostService {
 
         post.setTitle(postDto.getTitle());
         post.setContent(postDto.getContent());
-
+        post.setCreatedAt(LocalDateTime.now());
         postRepository.save(post);
     }
 
@@ -152,6 +151,13 @@ public class PostService {
                 throw new IllegalArgumentException("해당 게시물에 대한 수정 권한이 존재하지 않습니다.");
             }
         }
+    }
+
+    public Page<Post> getPostPage(int page){
+        Pageable pageable = PageRequest.of(
+                page, 10, Sort.by(Sort.Direction.DESC, "id")
+        );
+        return postRepository.findAll(pageable);
     }
 
 }

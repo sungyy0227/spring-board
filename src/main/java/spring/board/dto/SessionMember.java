@@ -1,5 +1,6 @@
 package spring.board.dto;
 
+import spring.board.domain.Member;
 import spring.board.domain.Role;
 
 public class SessionMember {
@@ -14,6 +15,7 @@ public class SessionMember {
         this.nickname = nickname;
         this.role = role;
     }
+
 
     public Long getId() {
         return id;
