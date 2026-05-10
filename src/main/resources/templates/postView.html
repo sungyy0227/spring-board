@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <link rel="stylesheet" th:href="@{/css/postView.css}">
 <head>
-    <title th:text="${post.title}">게시물 상제 페이지</title>
+    <title th:text="${post.title}">게시물 상세 페이지</title>
 </head>
 <body>
 <div class="content-box">
@@ -32,22 +32,24 @@
 
     <div class="deleteAndModify">
         <div th:if="${post.member != null and loginMember != null and post.member.id == loginMember.id}">
-            <form th:action="@{/post/modify/{id}(id=${post.id})}" method="post">
+            <form th:action="@{/posts/{id}/edit(id=${post.id})}" method="post">
                 <button type="submit">글수정</button>
             </form>
 
-            <form th:action="@{/post/delete/{id}(id=${post.id})}" method="post">
+            <form th:action="@{/posts/{id}(id=${post.id})}" method="post">
+                <input type="hidden" name="_method" value="delete">
                 <button type="submit">글삭제</button>
             </form>
         </div>
 
         <div th:if="${post.member == null}">
-            <form th:action="@{/post/modify/{id}(id=${post.id})}" method="post">
+            <form th:action="@{/posts/{id}/edit(id=${post.id})}" method="post">
                 <input type="password" name="password" placeholder="비밀번호 입력">
                 <button type="submit">글수정</button>
             </form>
 
-            <form th:action="@{/post/delete/{id}(id=${post.id})}" method="post">
+            <form th:action="@{/posts/{id}(id=${post.id})}" method="post">
+                <input type="hidden" name="_method" value="delete">
                 <input type="password" name="password" placeholder="비밀번호 입력">
                 <button type="submit">글삭제</button>
             </form>
@@ -72,7 +74,8 @@
         
         <td th:text="${comment.commentContent}">내용</td>
         <td>
-            <form th:action="@{/post/{postId}/comment/{commentId}/delete(postId=${post.id}, commentId=${comment.id})}" method="post">
+            <form th:action="@{/posts/{postId}/comments/{commentId}(postId=${post.id}, commentId=${comment.id})}" method="post">
+                <input type="hidden" name="_method" value="delete">
                 <input th:if="${comment.member == null}" type="password" placeholder="비밀번호" name="guestRawPassword">
                 <button type="submit">X</button>
             </form>
@@ -81,7 +84,7 @@
 </table>
 
 <div class="comment-actions">
-    <form th:action="@{/post/comment/{id}(id=${post.id})}" method="post">
+    <form th:action="@{/posts/{id}/comments(id=${post.id})}" method="post">
         <input th:if="${loginMember == null}" name="commenter" placeholder="작성자">
         <span th:if="${loginMember != null}" th:text="${loginMember.nickname} + ' 님'"></span>
         <input name="commentContent" placeholder="댓글">

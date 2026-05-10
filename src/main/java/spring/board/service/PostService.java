@@ -1,7 +1,6 @@
 package spring.board.service;
 
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -60,11 +59,11 @@ public class PostService {
         postRepository.delete(post);
     }
 
-    public Post getPostAndIncreaseViewCount(long id){
-        Post post=postRepository.findById(id).orElseThrow();
-        post.setViewCount(post.getViewCount()+1);
+    public Post getPostAndIncreaseViewCount(Long id){
+        int updatedCount = postRepository.increaseViewCount(id);
+        if(updatedCount ==0) throw new IllegalArgumentException("게시물이 존재하지 않습니다.");
 
-        return post;
+        return postRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다."));
     }
 
     public Post getPost(long id){
@@ -97,7 +96,7 @@ public class PostService {
         postRepository.resetId();
     }
 
-    public void uploadPost(SessionMember loginMember, PostDto postDto) {
+    public Long uploadPost(SessionMember loginMember, PostDto postDto) {
         Post post = new Post();
 
         if (loginMember!=null){
@@ -114,6 +113,8 @@ public class PostService {
         post.setContent(postDto.getContent());
         post.setCreatedAt(LocalDateTime.now());
         postRepository.save(post);
+
+        return post.getId();
     }
 
     //유저가 쓴 글들 조회

@@ -60,7 +60,7 @@ public class PostController {
         return "index";
     }
 
-    @GetMapping("/write")
+    @GetMapping("/posts/new")
     public String postWrite(Model model, HttpServletRequest request){
         HttpSession session=request.getSession(false);
 
@@ -86,14 +86,14 @@ public class PostController {
         return "redirect:/";
     }
 
-    @PostMapping("/uploadPost")
+    @PostMapping("/posts")
     public String uploadPost(PostDto postdto, HttpServletRequest request){
         SessionMember loginMember = getLoginMember(request);
-        postService.uploadPost(loginMember,postdto);
-        return "redirect:/";
+        Long postId=postService.uploadPost(loginMember,postdto);
+        return "redirect:/posts/" + postId;
     }
 
-    @GetMapping("/post/{id}")
+    @GetMapping("/posts/{id}")
     public String showPost(@PathVariable Long id,Model model, HttpServletRequest request){
         Post post=postService.getPostAndIncreaseViewCount(id);
         SessionMember loginMember = getLoginMember(request);
@@ -103,15 +103,15 @@ public class PostController {
         return "postView";
     }
 
-    @PostMapping("/post/delete/{id}")
-    public String delPost(@PathVariable Long id,
+    @DeleteMapping("/posts/{id}")
+    public String deletePost(@PathVariable Long id,
                           HttpServletRequest request,@RequestParam(required = false) String password){
         SessionMember loginMember = getLoginMember(request);
         postService.deletePost(id, password, loginMember);
         return "redirect:/";
     }
 
-    @PostMapping("/post/modify/{id}")
+    @PostMapping("/posts/{id}/edit")
     public String modifyPageRequestPost(@PathVariable Long id, Model model, HttpServletRequest request, @RequestParam(required = false) String password){
         SessionMember loginMember = getLoginMember(request);
         postService.validateUpdatePageAccess(loginMember, id, password);
@@ -129,7 +129,7 @@ public class PostController {
         return "postModify";
     }
 
-    @PostMapping("/post/modifyRequest/{id}")
+    @PatchMapping("/posts/{id}")
     public String modifyRequestPost(@PathVariable Long id, PostDto postdto, HttpServletRequest request){
         HttpSession session = request.getSession(false);
         SessionMember loginMember = getLoginMember(request);
@@ -141,18 +141,18 @@ public class PostController {
         postService.modifyPost(id, postdto);
         if(verifiedPostId!=null) session.removeAttribute("guestEditVerifiedPostId");
 
-        return "redirect:/post/"+id;
+        return "redirect:/posts/"+id;
     }
 
-    @PostMapping("/post/comment/{id}")
+    @PostMapping("/posts/{id}/comments")
     public String addComment(@PathVariable Long id, @ModelAttribute CommentDto commentDto, HttpServletRequest request){
         SessionMember loginMember = getLoginMember(request);
         commentService.addComment(id, commentDto, loginMember);
 
-        return "redirect:/post/"+id;
+        return "redirect:/posts/"+id;
     }
 
-    @PostMapping("/post/{postId}/comment/{commentId}/delete")
+    @DeleteMapping("/posts/{postId}/comments/{commentId}")
     public String deleteComment(@PathVariable Long postId, @PathVariable Long commentId, RedirectAttributes redirectAttributes,
                                 HttpServletRequest request, @RequestParam(required = false) String guestRawPassword){
         SessionMember loginMember = getLoginMember(request);
@@ -162,7 +162,7 @@ public class PostController {
         catch(IllegalArgumentException e){
             redirectAttributes.addFlashAttribute("commentError", e.getMessage());
         }
-        return "redirect:/post/" + postId;
+        return "redirect:/posts/" + postId;
     }
 
     private SessionMember getLoginMember(HttpServletRequest request){

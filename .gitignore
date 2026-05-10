@@ -39,3 +39,4 @@ out/
 # application config (sensitive)
 application-*.yml
 application-*.properties
+/LEARNING_LOG.md

@@ -95,14 +95,54 @@ Spring Boot와 Thymeleaf를 사용해 구현한 게시판 프로젝트입니다.
 
 ---
 
+### 8. 조회수 증가 동시성 처리
+
+게시글 조회수 증가 시 `조회 -> 값 증가 -> 저장` 방식에서 발생할 수 있는 lost update 문제를 막기 위해 JPQL update query를 사용했습니다.
+
+```java
+@Modifying(clearAutomatically = true, flushAutomatically = true)
+@Query("update Post p set p.viewCount = p.viewCount + 1 where p.id = :id")
+int increaseViewCount(@Param("id") Long id);
+```
+
+조회수를 자바에서 계산하지 않고 DB에서 `view_count = view_count + 1` 형태로 증가시켜 동시 요청 상황에서도 조회수 증가가 누락되지 않도록 처리했습니다.
+
+---
+
+### 9. RESTful URL 구조 정리
+
+게시글과 댓글을 리소스 중심 URL로 정리했습니다.
+
+| 기능 | Method | URL |
+|---|---|---|
+| 게시글 작성 페이지 | GET | `/posts/new` |
+| 게시글 작성 | POST | `/posts` |
+| 게시글 조회 | GET | `/posts/{id}` |
+| 게시글 수정 페이지 요청 | POST | `/posts/{id}/edit` |
+| 게시글 수정 | PATCH | `/posts/{id}` |
+| 게시글 삭제 | DELETE | `/posts/{id}` |
+| 댓글 작성 | POST | `/posts/{id}/comments` |
+| 댓글 삭제 | DELETE | `/posts/{postId}/comments/{commentId}` |
+
+비회원 게시글 수정 페이지 접근 시 비밀번호 검증이 필요하므로, 수정 폼 요청은 URL에 비밀번호가 노출되지 않도록 POST로 처리했습니다. 실제 게시글 수정과 삭제 요청은 HTML form의 `_method` hidden field를 사용해 PATCH, DELETE로 매핑했습니다.
+
+---
+
+### 10. 테스트
+
+- 게시글 삭제 권한 검증 테스트
+- 조회수 동시성 테스트
+
+조회수 동시성 테스트에서는 100개 스레드로 총 100,000번 조회수 증가 요청을 실행하고, 최종 조회수가 정확히 100,000인지 검증했습니다.
+
+---
+
 ## 🔄 개선 예정
 
-- 조회수 증가 로직의 동시성 문제 개선
-- RESTful URL 구조로 리팩토링
-- 게시글 페이징 / 검색 기능 추가
+- 검색 기능 추가
 - MySQL 전환
 - AWS 배포
-- Spring Security 적용
+- Spring Security 기반 인증 적용
 
 ---
 

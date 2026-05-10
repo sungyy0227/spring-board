@@ -5,7 +5,7 @@
     <title>게시물 작성</title>
 </head>
 <body>
-<form th:action="@{/uploadPost}" th:object="${postdto}" method="post">
+<form th:action="@{/posts}" th:object="${postdto}" method="post">
     <table>
         <tr>
             <td><input th:field="*{title}" placeholder="제목입력"></td>
