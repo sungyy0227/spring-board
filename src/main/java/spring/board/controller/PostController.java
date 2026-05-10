@@ -2,6 +2,7 @@ package spring.board.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.websocket.server.PathParam;
 import org.springframework.data.domain.Page;
 import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,7 @@ public class PostController {
         model.addAttribute("currentPage", currentPage);
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
+        model.addAttribute("searchMode", false);
 
         if(session!=null){
             SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
@@ -173,5 +175,49 @@ public class PostController {
             loginMember = (SessionMember) session.getAttribute("loginMember");
         }
         return loginMember;
+    }
+
+    @GetMapping("/posts")
+    public String searchPost(
+            @RequestParam String type,
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "1") int page, Model model, HttpServletRequest request){
+        if(page<1) page=1;
+
+        try{
+            Page<Post> postPage = postService.searchPosts(type, keyword, page);
+            if (postPage.isEmpty()) {
+                model.addAttribute("noSearchResult", true);
+            }
+            int currentPage = page;
+            int totalPages = postPage.getTotalPages();
+            int startPage;
+            int endPage;
+
+            if (currentPage <= 9) {
+                startPage = 1;
+                endPage = Math.min(9, totalPages);
+            } else {
+                startPage = ((currentPage - 10) / 10) * 10 + 10;
+                endPage = Math.min(startPage + 9, totalPages);
+            }
+            model.addAttribute("posts", postPage.getContent());
+            model.addAttribute("postPage", postPage);
+            model.addAttribute("currentPage", currentPage);
+            model.addAttribute("startPage", startPage);
+            model.addAttribute("endPage", endPage);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("type", type);
+            model.addAttribute("searchMode", true);
+        }
+        catch (IllegalArgumentException e){
+            home(1, model, request);
+            model.addAttribute("searchErrorMessage", e.getMessage());
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("type", type);
+            model.addAttribute("searchMode", false);
+        }
+
+        return "index";
     }
 }

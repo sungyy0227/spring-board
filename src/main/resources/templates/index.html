@@ -1,95 +1,127 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <link rel="stylesheet" th:href="@{/css/main.css}">
 <head>
-<title>메인</title>
+    <title>메인</title>
 </head>
 <body>
-<div class="menu">
-    <form th:action="@{/posts/new}" method="get">
-        <button type="submit">글작성</button>
-    </form>
+    <div class="menu">
+        <form th:action="@{/posts/new}" method="get">
+            <button type="submit">글작성</button>
+        </form>
 
-    <div class="right-menu">
+        <div class="right-menu">
 
-        <div th:if="${loginMember == null}">
-            <form th:action="@{/login}" method="get">
-                <button>로그인</button>
-            </form>
-        </div>
-
-        <div th:if="${loginMember != null}">
-            <span th:text="${loginMember.nickname} + ' 님'"></span>
-
-            <div th:if="${loginMember.isAdmin()}">
-                <form th:action="@{/admin}"><button>관리자페이지</button></form>
+            <div th:if="${loginMember == null}">
+                <form th:action="@{/login}" method="get">
+                    <button>로그인</button>
+                </form>
             </div>
-            <form th:action="@{/mypage}" method="get">
-                <button>마이페이지</button>
-            </form>
-            <form th:action="@{/logout}" method="post">
-                <button>로그아웃</button>
-            </form>
+
+            <div th:if="${loginMember != null}">
+                <span th:text="${loginMember.nickname} + ' 님'"></span>
+
+                <div th:if="${loginMember.isAdmin()}">
+                    <form th:action="@{/admin}"><button>관리자페이지</button></form>
+                </div>
+                <form th:action="@{/mypage}" method="get">
+                    <button>마이페이지</button>
+                </form>
+                <form th:action="@{/logout}" method="post">
+                    <button>로그아웃</button>
+                </form>
+            </div>
+
         </div>
-
     </div>
-</div>
-<table>
-    <colgroup>
-        <col style="width: 10%;">
-        <col style="width: 50%;">
-        <col style="width: 15%;">
-        <col style="width: 15%;">
-        <col style="width: 10%;">
-    </colgroup>
-    <thead>
-        <tr>
-            <th scope="col">번호</th>
-            <th scope="col">제목</th>
-            <th scope="col">작성자</th>
-            <th scope="col">날짜</th>
-            <th scope="col">조회수</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr th:each="post : ${posts}">
-            <td th:text="${post.id}"></td>
-            <td>
-            <a th:href="@{/posts/{id}(id=${post.id})}"
-               th:text="${post.title}">제목</a>
-            </td>
-            <td th:text="${post.poster}"></td>
-            <td th:text="${#temporals.format(post.createdAt, 'MM-dd HH:mm')}"></td>
-            <td th:text="${post.viewCount}"></td>
-        </tr>
-    <tr>
-        <td colspan="4"><div class="pagination" th:if="${postPage.totalPages > 0}">
+    <table>
+        <colgroup>
+            <col style="width: 10%;">
+            <col style="width: 50%;">
+            <col style="width: 15%;">
+            <col style="width: 15%;">
+            <col style="width: 10%;">
+        </colgroup>
+        <thead>
+            <tr>
+                <th scope="col">번호</th>
+                <th scope="col">제목</th>
+                <th scope="col">작성자</th>
+                <th scope="col">날짜</th>
+                <th scope="col">조회수</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:if="${searchMode and postPage.empty}">
+                <td colspan="5">검색 결과가 없습니다.</td>
+            </tr>
+            <tr th:each="post : ${posts}">
+                <td th:text="${post.id}"></td>
+                <td>
+                    <a th:href="@{/posts/{id}(id=${post.id})}"
+                       th:text="${post.title}">제목</a>
+                </td>
+                <td th:text="${post.poster}"></td>
+                <td th:text="${#temporals.format(post.createdAt, 'MM-dd HH:mm')}"></td>
+                <td th:text="${post.viewCount}"></td>
+            </tr>
+            <tr>
+                <td colspan="5"><div class="pagination" th:if="${postPage.totalPages > 0}">
 
-            <!-- 왼쪽 화살표 -->
-            <a class="pageButton"
-               th:if="${startPage > 1}"
-               th:href="@{/(page=${startPage - 1})}">
-                <button type="button">&lt;</button>
-            </a>
+                    <!-- 왼쪽 화살표 -->
+                    <a class="pageButton"
+                       th:if="${startPage > 1}"
+                       th:href="${searchMode}
+                           ? @{/posts(type=${type}, keyword=${keyword}, page=${startPage - 1})}
+                           : @{/(page=${startPage - 1})}">
+                        <button type="button">&lt;</button>
+                    </a>
 
-            <!-- 페이지 번호 -->
-            <a class="pageButton"
-               th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
-               th:href="@{/(page=${pageNum})}">
-                <button type="button"
-                        th:text="${pageNum}">
-                </button>
-            </a>
+                    <!-- 페이지 번호 -->
+                    <a class="pageButton"
+                       th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
+                       th:href="${searchMode}
+                           ? @{/posts(type=${type}, keyword=${keyword}, page=${pageNum})}
+                           : @{/(page=${pageNum})}">
+                        <button type="button"
+                                th:text="${pageNum}">
+                        </button>
+                    </a>
 
-            <!-- 오른쪽 화살표 -->
-            <a class="pageButton"
-               th:if="${endPage < postPage.totalPages}"
-               th:href="@{/(page=${endPage + 1})}">
-                <button type="button">&gt;</button>
-            </a>
+                    <!-- 오른쪽 화살표 -->
+                    <a class="pageButton"
+                       th:if="${endPage < postPage.totalPages}"
+                       th:href="${searchMode}
+                           ? @{/posts(type=${type}, keyword=${keyword}, page=${endPage + 1})}
+                           : @{/(page=${endPage + 1})}">
+                        <button type="button">&gt;</button>
+                    </a>
 
-        </div></td>
-    </tr>
-    </tbody>
-</table>
+                </div></td>
+            </tr>
+            <tr>
+                <td colspan="5">
+                    <form th:action="@{/posts}" method="get">
+                        <select name="type">
+                            <option value="title_content" th:selected="${type == 'title_content'}">제목+내용</option>
+                            <option value="title" th:selected="${type == 'title'}">제목</option>
+                            <option value="content" th:selected="${type == 'content'}">내용</option>
+                            <option value="poster" th:selected="${type == 'poster'}">작성자</option>
+                        </select>
+
+                        <input type="text" name="keyword" th:value="${keyword}" placeholder="검색어 입력">
+
+                        <button type="submit">검색</button>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5">
+                    <div th:if="${searchErrorMessage != null}">
+                        <h3 th:text="${searchErrorMessage}"></h3>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </body>
 </html>

@@ -161,4 +161,44 @@ public class PostService {
         return postRepository.findAll(pageable);
     }
 
+    public Page<Post> searchPosts(String type, String keyword, int page){
+        if(keyword==null){
+            throw new IllegalArgumentException("검색어를 입력해주세요.");
+        }
+
+        keyword = keyword.trim();
+
+        if(keyword.length() < 2){
+            throw new IllegalArgumentException("검색어를 2글자 이상 입력해주세요.");
+        }
+
+        if(type==null) {
+            type = "title_content";
+        }
+
+        Pageable pageable = PageRequest.of(
+                page-1, 10, Sort.by(Sort.Direction.DESC, "id")
+        );
+        Page<Post> posts;
+
+        switch (type){
+            case "title_content":
+                posts = postRepository.findByTitleContainingOrContentContaining(keyword, keyword, pageable);
+                break;
+            case "title":
+                posts = postRepository.findByTitleContaining(keyword, pageable);
+                break;
+            case "content":
+                posts = postRepository.findByContentContaining(keyword, pageable);
+                break;
+            case "poster":
+                posts = postRepository.findByPosterContaining(keyword, pageable);
+                break;
+            default:
+                posts = postRepository.findByTitleContainingOrContentContaining(keyword, keyword, pageable);
+        }
+
+        return posts;
+
+    }
 }
