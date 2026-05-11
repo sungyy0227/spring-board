@@ -156,7 +156,7 @@ public class PostService {
 
     public Page<Post> getPostPage(int page){
         Pageable pageable = PageRequest.of(
-                page, 10, Sort.by(Sort.Direction.DESC, "id")
+                page-1, 10, Sort.by(Sort.Direction.DESC, "id")
         );
         return postRepository.findAll(pageable);
     }

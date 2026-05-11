@@ -97,7 +97,7 @@ public class MemberController {
         return "admin";
     }
 
-    @GetMapping("/admin/members") //중복된 유저나 없는 유저 예외 처리 하기
+    @GetMapping("/admin/members")
     public String searchMember(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String mode,
@@ -114,15 +114,37 @@ public class MemberController {
     }
 
     @PostMapping("/admin/members/{id}/grant-admin")
-    public String grandAdmin(@PathVariable Long id){
+    public String grantAdmin(@PathVariable Long id, HttpServletRequest request){
         memberService.grantAdmin(id);
-        return "redirect:/admin/members/{id}";
+        refreshLoginMemberSession(request);
+        return "redirect:/admin/members/"+id;
     }
 
     @PostMapping("/admin/members/{id}/remove-admin")
     public String removeAdmin(@PathVariable Long id, HttpServletRequest request){
         memberService.removeAdmin(id);
-        return "redirect:/admin/members/{id}";
+        refreshLoginMemberSession(request);
+        return "redirect:/admin/members/"+id;
+    }
+
+    private void refreshLoginMemberSession(HttpServletRequest request){ // 현재 요청을 보낸 사용자의 세션 정보를 DB 기준으로 갱신
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return;
+        }
+        SessionMember loginMember = (SessionMember) session.getAttribute("loginMember");
+
+        if(loginMember==null){
+            return;
+        }
+
+        Member member=memberService.findById(loginMember.getId());
+        loginMember.setRole(member.getRole());
+        loginMember.setLoginId(member.getLoginId());
+        loginMember.setId(member.getId());
+        loginMember.setNickname(member.getNickname());
+
+        session.setAttribute("loginMember", loginMember);
     }
 
     @GetMapping("/admin/members/{id}")

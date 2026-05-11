@@ -34,25 +34,8 @@ public class PostController {
     public String home(@RequestParam(defaultValue = "1") int page,Model model, HttpServletRequest request){
         HttpSession session=request.getSession(false);
         if(page<1) page=1;
-        Page<Post> postPage = postService.getPostPage(page - 1);
-        int currentPage = page;
-        int totalPages = postPage.getTotalPages();
-        int startPage;
-        int endPage;
-
-        if (currentPage <= 9) {
-            startPage = 1;
-            endPage = Math.min(9, totalPages);
-        } else {
-            startPage = ((currentPage - 10) / 10) * 10 + 10;
-            endPage = Math.min(startPage + 9, totalPages);
-        }
-        model.addAttribute("posts", postPage.getContent());
-        model.addAttribute("postPage", postPage);
-        model.addAttribute("currentPage", currentPage);
-        model.addAttribute("startPage", startPage);
-        model.addAttribute("endPage", endPage);
-        model.addAttribute("searchMode", false);
+        Page<Post> postPage = postService.getPostPage(page);
+        addPostList(model, postPage, page, false);
 
         if(session!=null){
             SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
@@ -64,12 +47,8 @@ public class PostController {
 
     @GetMapping("/posts/new")
     public String postWrite(Model model, HttpServletRequest request){
-        HttpSession session=request.getSession(false);
-
-        if(session!=null){
-            SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
-            model.addAttribute("loginMember", loginMember);
-        }
+        SessionMember loginMember = getLoginMember(request);
+        model.addAttribute("loginMember", loginMember);
 
         model.addAttribute("postdto",new PostDto());
         return "postWrite";
@@ -183,41 +162,43 @@ public class PostController {
             @RequestParam String keyword,
             @RequestParam(defaultValue = "1") int page, Model model, HttpServletRequest request){
         if(page<1) page=1;
+        Page<Post> postPage = postService.searchPosts(type, keyword, page);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("type", type);
 
         try{
-            Page<Post> postPage = postService.searchPosts(type, keyword, page);
-            if (postPage.isEmpty()) {
-                model.addAttribute("noSearchResult", true);
-            }
-            int currentPage = page;
-            int totalPages = postPage.getTotalPages();
-            int startPage;
-            int endPage;
-
-            if (currentPage <= 9) {
-                startPage = 1;
-                endPage = Math.min(9, totalPages);
-            } else {
-                startPage = ((currentPage - 10) / 10) * 10 + 10;
-                endPage = Math.min(startPage + 9, totalPages);
-            }
-            model.addAttribute("posts", postPage.getContent());
-            model.addAttribute("postPage", postPage);
-            model.addAttribute("currentPage", currentPage);
-            model.addAttribute("startPage", startPage);
-            model.addAttribute("endPage", endPage);
-            model.addAttribute("keyword", keyword);
-            model.addAttribute("type", type);
-            model.addAttribute("searchMode", true);
+            addPostList(model,postPage,page,true);
         }
         catch (IllegalArgumentException e){
             home(1, model, request);
             model.addAttribute("searchErrorMessage", e.getMessage());
-            model.addAttribute("keyword", keyword);
-            model.addAttribute("type", type);
             model.addAttribute("searchMode", false);
         }
 
         return "index";
+    }
+
+    private void addPostList(Model model,Page<Post> postPage,int page, boolean searchMode){
+        if (postPage.isEmpty()) {
+            model.addAttribute("noSearchResult", true);
+        }
+        int currentPage = page;
+        int totalPages = postPage.getTotalPages();
+        int startPage;
+        int endPage;
+
+        if (currentPage <= 9) {
+            startPage = 1;
+            endPage = Math.min(9, totalPages);
+        } else {
+            startPage = ((currentPage - 10) / 10) * 10 + 10;
+            endPage = Math.min(startPage + 9, totalPages);
+        }
+        model.addAttribute("posts", postPage.getContent());
+        model.addAttribute("postPage", postPage);
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+        model.addAttribute("searchMode", true);
     }
 }
