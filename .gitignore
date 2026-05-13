@@ -40,3 +40,6 @@ out/
 application-*.yml
 application-*.properties
 /LEARNING_LOG.md
+
+# uploaded images
+/uploads/

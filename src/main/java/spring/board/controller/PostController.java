@@ -2,7 +2,6 @@ package spring.board.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import jakarta.websocket.server.PathParam;
 import org.springframework.data.domain.Page;
 import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +15,7 @@ import spring.board.dto.SessionMember;
 import spring.board.service.CommentService;
 import spring.board.service.MemberService;
 import spring.board.service.PostService;
+
 
 @Controller
 public class PostController {
@@ -68,10 +68,16 @@ public class PostController {
     }
 
     @PostMapping("/posts")
-    public String uploadPost(PostDto postdto, HttpServletRequest request){
+    public String uploadPost(PostDto postdto, HttpServletRequest request, Model model, RedirectAttributes redirectAttributes){
         SessionMember loginMember = getLoginMember(request);
-        Long postId=postService.uploadPost(loginMember,postdto);
-        return "redirect:/posts/" + postId;
+        try{
+            Long postId=postService.uploadPost(loginMember,postdto);
+            return "redirect:/posts/" + postId;
+        }
+        catch(Exception e){
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/posts/new";
+        }
     }
 
     @GetMapping("/posts/{id}")
@@ -199,6 +205,7 @@ public class PostController {
         model.addAttribute("currentPage", currentPage);
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
-        model.addAttribute("searchMode", true);
+        model.addAttribute("searchMode", searchMode);
+
     }
 }

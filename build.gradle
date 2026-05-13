@@ -27,6 +27,7 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'com.h2database:h2'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.apache.tika:tika-core:3.3.0'
 }
 
 tasks.named('test') {

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import spring.board.dto.PostDto;
 import spring.board.dto.SessionMember;
 import spring.board.domain.Member;
@@ -15,6 +16,7 @@ import spring.board.repository.CommentRepository;
 import spring.board.repository.MemberRepository;
 import spring.board.repository.PostRepository;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,14 +27,19 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final PasswordEncoder passwordEncoder;
     private final MemberRepository memberRepository;
+    private final ImageService imageService;
 
-    public PostService(PostRepository postRepository, CommentRepository commentRepository, PasswordEncoder passwordEncoder, MemberRepository memberRepository){
+    public PostService(PostRepository postRepository, CommentRepository commentRepository,
+                       PasswordEncoder passwordEncoder, MemberRepository memberRepository,
+                       ImageService imageService){
         this.commentRepository= commentRepository;
         this.postRepository = postRepository;
         this.passwordEncoder = passwordEncoder;
         this.memberRepository = memberRepository;
+        this.imageService = imageService;
     }
 
+    //TODO: 게시글 삭제시 게시글에 포함된 이미지도 함께 삭제되게 변경
     public void deletePost(Long id, String password, SessionMember loginMember){
         Post post = postRepository.findById(id).orElseThrow(
                 () -> new IllegalArgumentException("게시물 없음"));
@@ -96,7 +103,7 @@ public class PostService {
         postRepository.resetId();
     }
 
-    public Long uploadPost(SessionMember loginMember, PostDto postDto) {
+    public Long uploadPost(SessionMember loginMember, PostDto postDto) throws IOException {
         Post post = new Post();
 
         if (loginMember!=null){
@@ -108,11 +115,21 @@ public class PostService {
             post.setPoster(postDto.getPoster());
             post.setGuestPassword(passwordEncoder.encode(postDto.getGuestPassword()));
         }
-
-        post.setTitle(postDto.getTitle());
-        post.setContent(postDto.getContent());
-        post.setCreatedAt(LocalDateTime.now());
-        postRepository.save(post);
+        String imageUrl = null;
+        try{
+            imageUrl = imageService.store(postDto.getImageFile());
+            post.setImageUrl(imageUrl);
+            post.setTitle(postDto.getTitle());
+            post.setContent(postDto.getContent());
+            post.setCreatedAt(LocalDateTime.now());
+            postRepository.save(post);
+        }
+        catch(Exception e){
+            if(imageUrl!=null){
+                imageService.deleteByImageUrl(imageUrl);
+            }
+            throw e;
+        }
 
         return post.getId();
     }
