@@ -20,8 +20,11 @@
         </div>
     </div>
     <hr>
+    <div th:if="${post.imageUrl != null}">
+        <img th:src="${post.imageUrl}" alt="게시글 이미지" style="max-width: 500px;">
+    </div>
     <div class="article">
-        <div th:utext="${post.content}"></div>
+        <p th:text="${post.content}">내용</p>
     </div>
 </div>
 

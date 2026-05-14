@@ -1,13 +1,14 @@
 package spring.board.service;
 
 import jakarta.transaction.Transactional;
+import org.owasp.html.PolicyFactory;
+import org.owasp.html.Sanitizers;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import spring.board.dto.PostDto;
 import spring.board.dto.SessionMember;
 import spring.board.domain.Member;
@@ -27,16 +28,13 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final PasswordEncoder passwordEncoder;
     private final MemberRepository memberRepository;
-    private final ImageService imageService;
 
     public PostService(PostRepository postRepository, CommentRepository commentRepository,
-                       PasswordEncoder passwordEncoder, MemberRepository memberRepository,
-                       ImageService imageService){
+                       PasswordEncoder passwordEncoder, MemberRepository memberRepository){
         this.commentRepository= commentRepository;
         this.postRepository = postRepository;
         this.passwordEncoder = passwordEncoder;
         this.memberRepository = memberRepository;
-        this.imageService = imageService;
     }
 
     //TODO: 게시글 삭제시 게시글에 포함된 이미지도 함께 삭제되게 변경
@@ -88,11 +86,15 @@ public class PostService {
 
     public void modifyPost(long id, PostDto postdto){
         Post post = postRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
+        PolicyFactory policy = Sanitizers.FORMATTING
+                .and(Sanitizers.BLOCKS)
+                .and(Sanitizers.LINKS)
+                .and(Sanitizers.IMAGES);
         if(post.getMember()==null){
             post.setPoster(postdto.getPoster());
         }
         post.setTitle(postdto.getTitle());
-        post.setContent(postdto.getContent());
+        post.setContent(policy.sanitize(postdto.getContent()));
     }
 
     public void deleteAllAndResetId() {
@@ -105,6 +107,10 @@ public class PostService {
 
     public Long uploadPost(SessionMember loginMember, PostDto postDto) throws IOException {
         Post post = new Post();
+        PolicyFactory policy = Sanitizers.FORMATTING
+                .and(Sanitizers.BLOCKS)
+                .and(Sanitizers.LINKS)
+                .and(Sanitizers.IMAGES);
 
         if (loginMember!=null){
             post.setPoster(loginMember.getNickname());
@@ -115,19 +121,13 @@ public class PostService {
             post.setPoster(postDto.getPoster());
             post.setGuestPassword(passwordEncoder.encode(postDto.getGuestPassword()));
         }
-        String imageUrl = null;
         try{
-            imageUrl = imageService.store(postDto.getImageFile());
-            post.setImageUrl(imageUrl);
             post.setTitle(postDto.getTitle());
-            post.setContent(postDto.getContent());
+            post.setContent(policy.sanitize(postDto.getContent()));
             post.setCreatedAt(LocalDateTime.now());
             postRepository.save(post);
         }
         catch(Exception e){
-            if(imageUrl!=null){
-                imageService.deleteByImageUrl(imageUrl);
-            }
             throw e;
         }
 

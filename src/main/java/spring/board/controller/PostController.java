@@ -7,14 +7,19 @@ import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import spring.board.domain.Post;
 import spring.board.dto.CommentDto;
 import spring.board.dto.PostDto;
 import spring.board.dto.SessionMember;
 import spring.board.service.CommentService;
+import spring.board.service.ImageService;
 import spring.board.service.MemberService;
 import spring.board.service.PostService;
+
+import java.io.IOException;
+import java.util.Map;
 
 
 @Controller
@@ -22,12 +27,14 @@ public class PostController {
     private final PostService postService;
     private final CommentService commentService;
     private final MemberService memberService;
+    private final ImageService imageService;
 
     @Autowired
-    public PostController(PostService postService, CommentService commentService, MemberService memberService) {
+    public PostController(PostService postService, CommentService commentService, MemberService memberService, ImageService imageService) {
         this.postService = postService;
         this.commentService=commentService;
         this.memberService = memberService;
+        this.imageService = imageService;
     }
 
     @RequestMapping("/")
@@ -78,6 +85,13 @@ public class PostController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/posts/new";
         }
+    }
+
+    @PostMapping("/editor/images")
+    @ResponseBody
+    public Map<String, String> uploadEditorImage(@RequestParam("imageFile")MultipartFile imageFile) throws IOException {
+        String imageUrl = imageService.store(imageFile);
+        return Map.of("url", imageUrl);
     }
 
     @GetMapping("/posts/{id}")

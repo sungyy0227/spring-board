@@ -1,33 +1,71 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
-<link rel="stylesheet" th:href="@{/css/postWrite.css}">
 <head>
     <title>게시물 작성</title>
+    <link rel="stylesheet" th:href="@{/css/postWrite.css}">
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
 </head>
 <body>
-<form th:action="@{/posts}" th:object="${postdto}" method="post"  enctype="multipart/form-data">
+<form id="post-form" th:action="@{/posts}" th:object="${postdto}" method="post" enctype="multipart/form-data">
     <table>
         <tr>
-            <td><input th:field="*{title}" placeholder="제목입력"></td>
+            <td>
+                <input th:field="*{title}" placeholder="제목입력">
+            </td>
             <td>
                 <input th:if="${loginMember == null}" th:field="*{poster}" placeholder="작성자 입력">
                 <span th:if="${loginMember != null}" th:text="${loginMember.nickname} + ' 님'"></span>
             </td>
         </tr>
-
-        <tr>
-            <td colspan="2"><textarea th:field="*{content}" placeholder="내용 입력"></textarea></td>
-        </tr>
         <tr>
             <td colspan="2">
-                <input type="file" th:field="*{imageFile}" accept="image/*">
+                <div id="editor"></div>
+                <textarea id="content" th:field="*{content}" hidden></textarea>
             </td>
         </tr>
-
     </table>
     <button type="submit">작성</button>
     <input type="password" th:if="${loginMember == null}" th:field="*{guestPassword}" placeholder="비밀번호 입력">
 </form>
+
+<script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+<script>
+    const contentField = document.querySelector('#content');
+    const postForm = document.querySelector('#post-form');
+
+    const editor = new toastui.Editor({
+        el: document.querySelector('#editor'),
+        height: '500px',
+        initialEditType: 'wysiwyg',
+        previewStyle: 'vertical',
+        initialValue: contentField.value || '',
+        usageStatistics: false,
+        hooks: {
+            addImageBlobHook: async function (blob, callback) {
+                const formData = new FormData();
+                formData.append('imageFile', blob, blob.name || 'image.png');
+
+                const response = await fetch('/editor/images', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    alert('이미지 업로드에 실패했습니다.');
+                    return;
+                }
+
+                const result = await response.json();
+
+                callback(result.url, blob.name || 'image');
+            }
+        }
+    });
+
+    postForm.addEventListener('submit', function () {
+        contentField.value = editor.getHTML();
+    });
+</script>
 <div th:if="${errorMessage}" th:text="${errorMessage}" style="color:red;"></div>
 </body>
 </html>

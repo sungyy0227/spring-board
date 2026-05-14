@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<link rel="stylesheet" th:href="@{/css/postWrite.css}">
+<head>
+    <title>게시물 작성</title>
+</head>
+<body>
+<form th:action="@{/posts}" th:object="${postdto}" method="post"  enctype="multipart/form-data">
+    <table>
+        <tr>
+            <td><input th:field="*{title}" placeholder="제목입력"></td>
+            <td>
+                <input th:if="${loginMember == null}" th:field="*{poster}" placeholder="작성자 입력">
+                <span th:if="${loginMember != null}" th:text="${loginMember.nickname} + ' 님'"></span>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2"><textarea th:field="*{content}" placeholder="내용 입력"></textarea></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input type="file" th:field="*{imageFile}" accept="image/*">
+            </td>
+        </tr>
+
+    </table>
+    <button type="submit">작성</button>
+    <input type="password" th:if="${loginMember == null}" th:field="*{guestPassword}" placeholder="비밀번호 입력">
+</form>
+<div th:if="${errorMessage}" th:text="${errorMessage}" style="color:red;"></div>
+</body>
+</html>

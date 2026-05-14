@@ -10,7 +10,8 @@ Spring Boot와 Thymeleaf를 사용해 구현한 게시판 프로젝트입니다.
 - 회원가입 / 로그인 / 로그아웃
 - 게시글 CRUD 및 조회수 증가
 - 게시글 키워드 검색
-- 게시글 이미지 업로드
+- Toast UI Editor 기반 게시글 작성 / 수정
+- 에디터 본문 이미지 업로드
 - 댓글 작성 / 삭제
 - 회원 / 비회원 작성자 구분
 - 관리자 기능
@@ -33,6 +34,12 @@ Spring Boot와 Thymeleaf를 사용해 구현한 게시판 프로젝트입니다.
 - Thymeleaf
 - H2 Database
 - Gradle
+- 
+## 📚 사용 라이브러리
+
+- Toast UI Editor
+- OWASP Java HTML Sanitizer
+- Apache Tika
 
 ---
 
@@ -130,21 +137,40 @@ int increaseViewCount(@Param("id") Long id);
 
 ---
 
-### 10. 게시글 이미지 업로드
+### 10. Toast UI Editor 기반 게시글 작성 / 수정
 
-게시글 작성 시 이미지를 선택적으로 첨부할 수 있도록 구현했습니다.
+기존 textarea 기반 게시글 작성 / 수정 화면을 Toast UI Editor 기반 웹 에디터로 변경했습니다.
 
-- 작성 폼에 `multipart/form-data`를 적용하고, `PostDto`의 `MultipartFile imageFile`로 업로드 파일을 전달
-- `ImageService`에서 업로드 디렉터리를 생성하고, UUID 기반 파일명으로 저장하여 파일명 충돌 방지
-- DB에는 실제 파일 경로가 아니라 `/images/post/{파일명}` 형태의 이미지 URL만 저장
-- 확장자 검사와 Apache Tika 기반 MIME 타입 검사를 함께 적용하여 이미지 파일만 업로드 가능하도록 제한
-- `WebConfig`에서 `/images/post/**` 요청을 업로드 디렉터리로 매핑하여 저장된 이미지를 게시글 상세 화면에서 출력
-- 게시글 저장 중 예외가 발생하면 이미 저장된 이미지 파일을 삭제하도록 처리
-- `spring.servlet.multipart.max-file-size`, `spring.servlet.multipart.max-request-size` 설정으로 업로드 용량 제한
+- 작성 / 수정 화면에서 Toast UI Editor를 초기화하고, 제출 시 `editor.getHTML()` 결과를 `PostDto.content`로 전달
+- 게시글 본문은 HTML 문자열로 저장하고, 상세 화면에서는 `th:utext`로 렌더링
+- 기존 대표 이미지 업로드 방식 대신 에디터 본문 안에 이미지를 삽입하는 방식으로 변경
+- 에디터가 생성한 HTML을 그대로 출력할 때 발생할 수 있는 XSS 위험을 줄이기 위해 저장 전 OWASP Java HTML Sanitizer 적용
+
+```java
+PolicyFactory policy = Sanitizers.FORMATTING
+        .and(Sanitizers.BLOCKS)
+        .and(Sanitizers.LINKS)
+        .and(Sanitizers.IMAGES);
+
+post.setContent(policy.sanitize(postDto.getContent()));
+```
 
 ---
 
-### 11. 게시글 검색
+### 11. 에디터 본문 이미지 업로드
+
+Toast UI Editor의 이미지 업로드 hook을 사용해 본문에 이미지를 붙여넣거나 업로드할 때 서버에 즉시 저장되도록 구현했습니다.
+
+- 에디터의 `addImageBlobHook`에서 이미지 파일을 `FormData`로 감싸 `/editor/images`로 전송
+- 컨트롤러에서 `@RequestParam("imageFile") MultipartFile imageFile`로 이미지 파일 수신
+- `ImageService`에서 UUID 기반 파일명으로 저장하고 `/images/post/{파일명}` 형태의 URL 반환
+- 반환된 URL을 에디터 callback에 전달하여 본문 HTML에 `<img src="...">` 형태로 삽입
+- 확장자 검사와 Apache Tika 기반 MIME 타입 검사를 함께 적용하여 이미지 파일만 업로드 가능하도록 제한
+- `WebConfig`에서 `/images/post/**` 요청을 업로드 디렉터리로 매핑하여 저장된 이미지를 브라우저에서 조회 가능하도록 처리
+
+---
+
+### 12. 게시글 검색
 
 게시글 목록에서 검색 조건과 키워드를 이용해 게시글을 조회할 수 있도록 구현했습니다.
 
@@ -155,7 +181,7 @@ int increaseViewCount(@Param("id") Long id);
 
 ---
 
-### 12. 테스트
+### 13. 테스트
 
 - 게시글 삭제 권한 검증 테스트
 - 조회수 동시성 테스트
@@ -166,7 +192,10 @@ int increaseViewCount(@Param("id") Long id);
 
 ## 🔄 개선 예정
 
-- 게시글 삭제 시 첨부 이미지 파일 함께 삭제
+- 게시글 삭제 시 본문에 포함된 이미지 파일 함께 삭제
+- 에디터 본문에서 제거된 이미지 파일 정리
+- 게시글 작성 / 수정 시 제목, 작성자, 내용 빈 값 검증
+- 게시글 수정 페이지 진입 시 기존 제목 / 내용 / 작성자 기본값 표시
 - MySQL 전환
 - AWS 배포
 - Spring Security 기반 인증 적용

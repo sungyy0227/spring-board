@@ -3,9 +3,10 @@
 <!--<link rel="stylesheet" th:href="@{/css/postView.css}">-->
 <head>
     <title th:text="${post.title}">게시물 수정</title>
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
 </head>
 <body>
-<form th:action="@{/posts/{id}(id=${post.id})}" th:object="${postdto}" method="post">
+<form th:action="@{/posts/{id}(id=${post.id})}" th:object="${postdto}" method="post" enctype="multipart/form-data" id="post-form">
     <input type="hidden" name="_method" value="patch">
     <table>
         <tr>
@@ -17,12 +18,54 @@
         </tr>
 
         <tr>
-            <td colspan="2"><textarea th:field="*{content}" placeholder="내용 입력"></textarea></td>
+            <td colspan="2">
+                <div id="editor"></div>
+                <textarea id="content" th:field="*{content}" hidden></textarea>
+            </td>
         </tr>
 
     </table>
-    <input type="submit" value="수정하기">
+    <button type="submit">수정하기</button>
 </form>
 <a th:href="@{/}">글목록</a>
+
+<script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+<script>
+    const contentField = document.querySelector('#content');
+    const postForm = document.querySelector('#post-form');
+
+    const editor = new toastui.Editor({
+        el: document.querySelector('#editor'),
+        height: '500px',
+        initialEditType: 'wysiwyg',
+        previewStyle: 'vertical',
+        initialValue: contentField.value || '',
+        usageStatistics: false,
+        hooks: {
+            addImageBlobHook: async function (blob, callback) {
+                const formData = new FormData();
+                formData.append('imageFile', blob, blob.name || 'image.png');
+
+                const response = await fetch('/editor/images', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    alert('이미지 업로드에 실패했습니다.');
+                    return;
+                }
+
+                const result = await response.json();
+
+                callback(result.url, blob.name || 'image');
+            }
+        }
+    });
+
+    postForm.addEventListener('submit', function () {
+        contentField.value = editor.getHTML();
+    });
+</script>
 </body>
 </html>
