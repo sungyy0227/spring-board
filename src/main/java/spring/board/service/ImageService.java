@@ -5,20 +5,26 @@ import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import spring.board.dto.EditorImageResponse;
+import spring.board.domain.Image;
+import spring.board.repository.ImageRepository;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
 public class ImageService {
     private final Path uploadPath;
     private final Tika tika = new Tika();
+    private final ImageRepository imageRepository;
 
-    public ImageService(@Value("${file.upload-dir}") String uploadDir){
+    public ImageService(@Value("${file.upload-dir}") String uploadDir, ImageRepository imageRepository){
         this.uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        this.imageRepository = imageRepository;
     }
 
     @PostConstruct
@@ -28,7 +34,7 @@ public class ImageService {
 
     public String store(MultipartFile file) throws IOException{
         if (file == null || file.isEmpty()) {
-            return null;
+            throw new IllegalArgumentException("이미지가 존재하지 않습니다.");
         }
 
         String originalFilename = file.getOriginalFilename();
@@ -49,6 +55,19 @@ public class ImageService {
 
         return "/images/post/" + storedFilename;
     }
+
+    //TODO: image에 post_id가 null일때만 매핑이 되게 설정(최소방어임)
+    public EditorImageResponse uploadImage(MultipartFile file) throws IOException {
+        String imageUrl = store(file);
+        Image image=new Image();
+        image.setUploadedAt(LocalDateTime.now());
+        image.setUrl(imageUrl);
+        image.setPost(null);
+        Image savedImage = imageRepository.save(image);
+        return new EditorImageResponse(savedImage.getId(), savedImage.getUrl());
+    }
+
+
 
     public void deleteByImageUrl(String imageUrl){
         if (imageUrl == null || imageUrl.isBlank()) {

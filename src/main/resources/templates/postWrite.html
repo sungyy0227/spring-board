@@ -32,6 +32,7 @@
 <script>
     const contentField = document.querySelector('#content');
     const postForm = document.querySelector('#post-form');
+    const uploadedImageIds = [];
 
     const editor = new toastui.Editor({
         el: document.querySelector('#editor'),
@@ -56,6 +57,10 @@
                 }
 
                 const result = await response.json();
+                uploadedImageIds.push({
+                    id: result.imageId,
+                    url: result.url
+                });
 
                 callback(result.url, blob.name || 'image');
             }
@@ -64,6 +69,18 @@
 
     postForm.addEventListener('submit', function () {
         contentField.value = editor.getHTML();
+
+        document.querySelectorAll('input[name="imageIds"]').forEach(input => input.remove());
+
+        uploadedImageIds
+            .filter(image => contentField.value.includes(image.url))
+            .forEach(image => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'imageIds';
+                input.value = image.id;
+                postForm.appendChild(input);
+            });
     });
 </script>
 <div th:if="${errorMessage}" th:text="${errorMessage}" style="color:red;"></div>

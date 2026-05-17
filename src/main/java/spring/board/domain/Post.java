@@ -18,7 +18,6 @@ public class Post {
     private int viewCount;
     private String guestPassword;
     private LocalDateTime createdAt;
-    private String imageUrl;
 
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -120,13 +119,5 @@ public class Post {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
     }
 }

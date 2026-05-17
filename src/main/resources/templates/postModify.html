@@ -6,13 +6,13 @@
     <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
 </head>
 <body>
-<form th:action="@{/posts/{id}(id=${post.id})}" th:object="${postdto}" method="post" enctype="multipart/form-data" id="post-form">
+<form th:action="@{/posts/{id}(id=${post.id})}" method="post" enctype="multipart/form-data" id="post-form">
     <input type="hidden" name="_method" value="patch">
     <table>
         <tr>
-            <td><input th:field="*{title}" placeholder="제목입력"></td>
+            <td><input name="title" th:value="${post.title}"></td>
             <td>
-                <input th:if="${post.member == null}" th:field="*{poster}" placeholder="작성자 입력">
+                <input th:if="${post.member == null}" name="poster" th:value="${post.poster}">
                 <span th:if="${post.member != null}" th:text="${post.poster} + ' 님'"></span>
             </td>
         </tr>
@@ -20,7 +20,7 @@
         <tr>
             <td colspan="2">
                 <div id="editor"></div>
-                <textarea id="content" th:field="*{content}" hidden></textarea>
+                <textarea id="content" name="content" hidden th:text="${post.content}"></textarea>
             </td>
         </tr>
 
@@ -33,6 +33,7 @@
 <script>
     const contentField = document.querySelector('#content');
     const postForm = document.querySelector('#post-form');
+    const uploadedImageIds = [];
 
     const editor = new toastui.Editor({
         el: document.querySelector('#editor'),
@@ -57,14 +58,32 @@
                 }
 
                 const result = await response.json();
+                uploadedImageIds.push({
+                    id: result.imageId,
+                    url: result.url
+                });
 
                 callback(result.url, blob.name || 'image');
             }
         }
     });
 
+    editor.setHTML(contentField.value || '');
+
     postForm.addEventListener('submit', function () {
         contentField.value = editor.getHTML();
+
+        document.querySelectorAll('input[name="imageIds"]').forEach(input => input.remove());
+
+        uploadedImageIds
+            .filter(image => contentField.value.includes(image.url))
+            .forEach(image => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'imageIds';
+                input.value = image.id;
+                postForm.appendChild(input);
+            });
     });
 </script>
 </body>

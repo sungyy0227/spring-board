@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import spring.board.dto.EditorImageResponse;
 import spring.board.domain.Post;
 import spring.board.dto.CommentDto;
 import spring.board.dto.PostDto;
@@ -19,7 +20,6 @@ import spring.board.service.MemberService;
 import spring.board.service.PostService;
 
 import java.io.IOException;
-import java.util.Map;
 
 
 @Controller
@@ -39,6 +39,7 @@ public class PostController {
 
     @RequestMapping("/")
     public String home(@RequestParam(defaultValue = "1") int page,Model model, HttpServletRequest request){
+        System.out.println(request.getRemoteAddr() + " 접속");
         HttpSession session=request.getSession(false);
         if(page<1) page=1;
         Page<Post> postPage = postService.getPostPage(page);
@@ -89,9 +90,8 @@ public class PostController {
 
     @PostMapping("/editor/images")
     @ResponseBody
-    public Map<String, String> uploadEditorImage(@RequestParam("imageFile")MultipartFile imageFile) throws IOException {
-        String imageUrl = imageService.store(imageFile);
-        return Map.of("url", imageUrl);
+    public EditorImageResponse uploadEditorImage(@RequestParam("imageFile")MultipartFile imageFile) throws IOException {
+        return imageService.uploadImage(imageFile);
     }
 
     @GetMapping("/posts/{id}")

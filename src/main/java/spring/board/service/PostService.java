@@ -10,10 +10,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring.board.dto.PostDto;
+import spring.board.domain.Image;
 import spring.board.dto.SessionMember;
 import spring.board.domain.Member;
 import spring.board.domain.Post;
 import spring.board.repository.CommentRepository;
+import spring.board.repository.ImageRepository;
 import spring.board.repository.MemberRepository;
 import spring.board.repository.PostRepository;
 
@@ -28,21 +30,25 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final PasswordEncoder passwordEncoder;
     private final MemberRepository memberRepository;
+    private final ImageRepository imageRepository;
+    private final ImageService imageService;
 
     public PostService(PostRepository postRepository, CommentRepository commentRepository,
-                       PasswordEncoder passwordEncoder, MemberRepository memberRepository){
+                       PasswordEncoder passwordEncoder, MemberRepository memberRepository, ImageRepository imageRepository, ImageService imageService){
         this.commentRepository= commentRepository;
         this.postRepository = postRepository;
         this.passwordEncoder = passwordEncoder;
         this.memberRepository = memberRepository;
+        this.imageRepository = imageRepository;
+        this.imageService = imageService;
     }
 
-    //TODO: 게시글 삭제시 게시글에 포함된 이미지도 함께 삭제되게 변경
     public void deletePost(Long id, String password, SessionMember loginMember){
         Post post = postRepository.findById(id).orElseThrow(
                 () -> new IllegalArgumentException("게시물 없음"));
 
         if(loginMember!=null && loginMember.isAdmin()){ //1. 관리자일 경우 무조건 삭제
+            deletePostImages(post.getId());
             postRepository.delete(post);
             return;
         }
@@ -61,7 +67,17 @@ public class PostService {
             }
         }
 
+        deletePostImages(post.getId());
         postRepository.delete(post);
+    }
+
+    public void deletePostImages(Long postId){
+        List<Image> images = imageRepository.findByPostId(postId);
+        for (Image image : images){
+            imageService.deleteByImageUrl(image.getUrl());
+        }
+        imageRepository.deleteAll(images);
+
     }
 
     public Post getPostAndIncreaseViewCount(Long id){
@@ -90,9 +106,12 @@ public class PostService {
                 .and(Sanitizers.BLOCKS)
                 .and(Sanitizers.LINKS)
                 .and(Sanitizers.IMAGES);
+
         if(post.getMember()==null){
             post.setPoster(postdto.getPoster());
         }
+
+        connectImagesToPost(postdto.getImageIds(), post);
         post.setTitle(postdto.getTitle());
         post.setContent(policy.sanitize(postdto.getContent()));
     }
@@ -126,12 +145,26 @@ public class PostService {
             post.setContent(policy.sanitize(postDto.getContent()));
             post.setCreatedAt(LocalDateTime.now());
             postRepository.save(post);
+            connectImagesToPost(postDto.getImageIds(), post);
         }
         catch(Exception e){
             throw e;
         }
 
         return post.getId();
+    }
+
+    private void connectImagesToPost(List<Long> imageIds, Post post) {
+        if (imageIds == null || imageIds.isEmpty()) {
+            return;
+        }
+
+        List<Image> images = imageRepository.findAllById(imageIds);
+        for (Image image : images) {
+            if(image.getPost()==null){
+                image.setPost(post);
+            }
+        }
     }
 
     //유저가 쓴 글들 조회

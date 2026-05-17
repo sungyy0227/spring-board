@@ -11,18 +11,6 @@ import spring.board.domain.Post;
 import java.util.*;
 
 public interface PostRepository extends JpaRepository<Post,Long> {
-
-//    public Post save(Post post);
-//
-//    public void deleteById(long id);
-//
-//    public Optional<Post> findById(long id);
-//
-//    public List<Post> findAll();
-//
-//    public void clear();
-//
-//    public void update(Post post);
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = "DELETE FROM POST", nativeQuery = true)
     void deleteAllNative();
