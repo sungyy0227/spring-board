@@ -124,11 +124,17 @@
         <form th:if="${!member.isAdmin()}"
               th:action="@{/admin/members/{id}/grant-admin(id=${member.id})}" method="post">
             <button type="submit" class="role-btn admin-btn">ADMIN 권한 부여</button>
+            <input type="hidden"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}">
         </form>
 
         <form th:if="${member.isAdmin()}"
               th:action="@{/admin/members/{id}/remove-admin(id=${member.id})}" method="post">
             <button type="submit" class="role-btn user-btn">ADMIN 권한 해제</button>
+            <input type="hidden"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}">
         </form>
     </div>
 </div>

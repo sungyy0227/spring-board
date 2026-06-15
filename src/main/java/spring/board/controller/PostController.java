@@ -2,10 +2,12 @@ package spring.board.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -39,7 +41,6 @@ public class PostController {
 
     @RequestMapping("/")
     public String home(@RequestParam(defaultValue = "1") int page,Model model, HttpServletRequest request){
-        System.out.println(request.getRemoteAddr() + " 접속");
         HttpSession session=request.getSession(false);
         if(page<1) page=1;
         Page<Post> postPage = postService.getPostPage(page);
@@ -58,7 +59,7 @@ public class PostController {
         SessionMember loginMember = getLoginMember(request);
         model.addAttribute("loginMember", loginMember);
 
-        model.addAttribute("postdto",new PostDto());
+        model.addAttribute("postDto",new PostDto());
         return "postWrite";
     }
 
@@ -76,10 +77,14 @@ public class PostController {
     }
 
     @PostMapping("/posts")
-    public String uploadPost(PostDto postdto, HttpServletRequest request, Model model, RedirectAttributes redirectAttributes){
+    public String uploadPost(@Valid @ModelAttribute("postDto") PostDto postDto, BindingResult bindingResult,
+                             HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
         SessionMember loginMember = getLoginMember(request);
+        if (bindingResult.hasErrors()) {
+            return "postWrite";
+        }
         try{
-            Long postId=postService.uploadPost(loginMember,postdto);
+            Long postId=postService.uploadPost(loginMember,postDto);
             return "redirect:/posts/" + postId;
         }
         catch(Exception e){

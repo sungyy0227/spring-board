@@ -34,11 +34,17 @@
         <div th:if="${post.member != null and loginMember != null and post.member.id == loginMember.id}">
             <form th:action="@{/posts/{id}/edit(id=${post.id})}" method="post">
                 <button type="submit">글수정</button>
+                <input type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}">
             </form>
 
             <form th:action="@{/posts/{id}(id=${post.id})}" method="post">
                 <input type="hidden" name="_method" value="delete">
                 <button type="submit">글삭제</button>
+                <input type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}">
             </form>
         </div>
 
@@ -46,12 +52,18 @@
             <form th:action="@{/posts/{id}/edit(id=${post.id})}" method="post">
                 <input type="password" name="password" placeholder="비밀번호 입력">
                 <button type="submit">글수정</button>
+                <input type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}">
             </form>
 
             <form th:action="@{/posts/{id}(id=${post.id})}" method="post">
                 <input type="hidden" name="_method" value="delete">
                 <input type="password" name="password" placeholder="비밀번호 입력">
                 <button type="submit">글삭제</button>
+                <input type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}">
             </form>
         </div>
     </div>
@@ -78,6 +90,9 @@
                 <input type="hidden" name="_method" value="delete">
                 <input th:if="${comment.member == null}" type="password" placeholder="비밀번호" name="guestRawPassword">
                 <button type="submit">X</button>
+                <input type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}">
             </form>
         </td>
     </tr>
@@ -90,6 +105,9 @@
         <input name="commentContent" placeholder="댓글">
         <input type="password" th:if="${loginMember == null}" name="guestRawPassword" placeholder="비밀번호">
         <button type="submit">댓글등록</button>
+        <input type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}">
     </form>
 </div>
 </body>

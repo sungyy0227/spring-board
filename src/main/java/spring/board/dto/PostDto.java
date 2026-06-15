@@ -1,12 +1,19 @@
 package spring.board.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class PostDto {
     private String poster;
+
+    @NotBlank(message = "제목은 필수입니다.")
     private String title;
+
+    @NotBlank(message = "내용은 필수입니다.")
     private String content;
+
     private String guestPassword;
     private List<Long> imageIds = new ArrayList<>();
 

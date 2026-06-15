@@ -43,3 +43,6 @@ application-*.properties
 
 # uploaded images
 /uploads/
+
+# logs
+/logs/

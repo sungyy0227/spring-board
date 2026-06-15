@@ -65,32 +65,32 @@ public class MemberController {
             return "redirect:/login/signup";
         }
     }
-
-    @PostMapping("/login")
-    public String login(LoginDto loginDto, HttpServletRequest request, RedirectAttributes redirectAttributes){
-        try{
-            Member member= memberService.login(loginDto.getLoginId(),loginDto.getPassword());
-
-            //세션 생성, 없으면 만들고 있으면 기존꺼 사용
-            HttpSession session=request.getSession(true);
-            SessionMember sessionMember=new SessionMember(member.getId(), member.getLoginId(), member.getNickname(), member.getRole());
-            session.setAttribute("loginMember",sessionMember);
-
-            return "redirect:/";
-        }catch(IllegalArgumentException e){
-            redirectAttributes.addFlashAttribute("loginError", e.getMessage());
-            return "redirect:/login";
-        }
-    }
-
-    @PostMapping("/logout")
-    public String logout(HttpServletRequest request){
-        HttpSession session=request.getSession(false);
-        if(session!= null){
-            session.invalidate();
-        }
-        return "redirect:/";
-    }
+    /*Spring Security로 전환*/
+//    @PostMapping("/login")
+//    public String login(LoginDto loginDto, HttpServletRequest request, RedirectAttributes redirectAttributes){
+//        try{
+//            Member member= memberService.login(loginDto.getLoginId(),loginDto.getPassword());
+//
+//            //세션 생성, 없으면 만들고 있으면 기존꺼 사용
+//            HttpSession session=request.getSession(true);
+//            SessionMember sessionMember=new SessionMember(member.getId(), member.getLoginId(), member.getNickname(), member.getRole());
+//            session.setAttribute("loginMember",sessionMember);
+//
+//            return "redirect:/";
+//        }catch(IllegalArgumentException e){
+//            redirectAttributes.addFlashAttribute("loginError", e.getMessage());
+//            return "redirect:/login";
+//        }
+//    }
+//
+//    @PostMapping("/logout")
+//    public String logout(HttpServletRequest request){
+//        HttpSession session=request.getSession(false);
+//        if(session!= null){
+//            session.invalidate();
+//        }
+//        return "redirect:/";
+//    }
 
     @GetMapping("/admin")
     public String admin(){

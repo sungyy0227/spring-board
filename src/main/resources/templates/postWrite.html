@@ -4,13 +4,18 @@
     <title>게시물 작성</title>
     <link rel="stylesheet" th:href="@{/css/postWrite.css}">
     <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
 </head>
 <body>
-<form id="post-form" th:action="@{/posts}" th:object="${postdto}" method="post" enctype="multipart/form-data">
+<form id="post-form" th:action="@{/posts}" th:object="${postDto}" method="post" enctype="multipart/form-data">
     <table>
         <tr>
             <td>
                 <input th:field="*{title}" placeholder="제목입력">
+                <div th:if="${#fields.hasErrors('title')}"
+                     th:errors="*{title}"
+                     style="color:red;"></div>
             </td>
             <td>
                 <input th:if="${loginMember == null}" th:field="*{poster}" placeholder="작성자 입력">
@@ -21,17 +26,26 @@
             <td colspan="2">
                 <div id="editor"></div>
                 <textarea id="content" th:field="*{content}" hidden></textarea>
+                <div th:if="${#fields.hasErrors('content')}"
+                     th:errors="*{content}"
+                     style="color:red;"></div>
             </td>
         </tr>
     </table>
+
     <button type="submit">작성</button>
     <input type="password" th:if="${loginMember == null}" th:field="*{guestPassword}" placeholder="비밀번호 입력">
+    <input type="hidden"
+           th:name="${_csrf.parameterName}"
+           th:value="${_csrf.token}">
 </form>
 
 <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
 <script>
     const contentField = document.querySelector('#content');
     const postForm = document.querySelector('#post-form');
+    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
     const uploadedImageIds = [];
 
     const editor = new toastui.Editor({
@@ -48,6 +62,9 @@
 
                 const response = await fetch('/editor/images', {
                     method: 'POST',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    },
                     body: formData
                 });
 
@@ -68,7 +85,8 @@
     });
 
     postForm.addEventListener('submit', function () {
-        contentField.value = editor.getHTML();
+        const markdown = editor.getMarkdown().trim();
+        contentField.value = markdown === '' ? '' : editor.getHTML();
 
         document.querySelectorAll('input[name="imageIds"]').forEach(input => input.remove());
 
@@ -83,6 +101,5 @@
             });
     });
 </script>
-<div th:if="${errorMessage}" th:text="${errorMessage}" style="color:red;"></div>
 </body>
 </html>

@@ -6,8 +6,15 @@
 <body>
 <div class="menu">
     <form th:action="@{/}" method="get"><button type="submit">글목록</button></form>
-    <form th:action="@{/clearPost}" method="post"><button type="submit">Post&Comment Reset</button></form>
-    <form th:action="@{/clearAll}" method="post"><button type="submit">All Reset</button></form>
+    <form th:action="@{/clearPost}" method="post"><button type="submit">Post&Comment Reset</button>
+        <input type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}">
+    </form>
+    <form th:action="@{/clearAll}" method="post"><button type="submit">All Reset</button>
+        <input type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}"></form>
 </div>
 
 <form action="/admin/members" method="get">
