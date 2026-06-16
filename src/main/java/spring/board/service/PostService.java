@@ -46,7 +46,7 @@ public class PostService {
 
     public void deletePost(Long id, String password, SessionMember loginMember){
         Post post = postRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("게시물 없음"));
+                () -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
 
         if(loginMember!=null && loginMember.isAdmin()){ //1. 관리자일 경우 무조건 삭제
             deletePostImages(post.getId());
@@ -56,16 +56,17 @@ public class PostService {
 
         if(post.getMember()!=null){ //2. 게시물 작성자가 회원일 경우
             if (loginMember == null) {
-                throw new IllegalArgumentException("삭제 권한 없음");
+                throw new IllegalArgumentException("삭제 권한 없습니다.");
             }
             if(!post.getMember().getId().equals(loginMember.getId())){
-                throw new IllegalArgumentException("삭제 권한 없음");
+                throw new IllegalArgumentException("삭제 권한 없습니다.");
             }
         }
         else{ //3. 게시물 작성자가 게스트(비로그인)일 경우
             if(password ==null || !passwordEncoder.matches(password,post.getGuestPassword())){
-                throw new IllegalArgumentException("비밀번호 틀림");
+                throw new IllegalArgumentException("비밀번호가 올바르지 않습니다.");
             }
+
         }
 
         deletePostImages(post.getId());
@@ -109,13 +110,39 @@ public class PostService {
                 .and(Sanitizers.IMAGES);
 
         if(post.getMember()==null){
+            if(!StringUtils.hasText(postdto.getPoster())){
+                throw new IllegalArgumentException("작성자는 필수입니다.");
+            }
             post.setPoster(postdto.getPoster());
         }
 
+        validateContent(postdto.getContent());
         connectImagesToPost(postdto.getImageIds(), post);
         post.setTitle(postdto.getTitle());
         post.setContent(policy.sanitize(postdto.getContent()));
     }
+
+    private void validateContent(String content){
+        if(!hasTextContent(content)){
+            throw new IllegalArgumentException("내용은 필수입니다.");
+        }
+    }
+
+    private boolean hasTextContent(String content) {
+        if (content == null) {
+            return false;
+        }
+
+        String text = content
+                .replaceAll("<[^>]*>", "")
+                .replace("&nbsp;", "")
+                .replace("&#160;", " ")
+                .replace("\u00A0", " ")
+                .trim();
+
+        return StringUtils.hasText(text);
+    }
+
 
     public void deleteAllAndResetId() {
         commentRepository.deleteAllNative();
@@ -251,5 +278,9 @@ public class PostService {
 
         return posts;
 
+    }
+
+    public Post findPost(Long id) {
+        return postRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
     }
 }

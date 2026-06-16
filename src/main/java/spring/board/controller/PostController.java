@@ -111,40 +111,87 @@ public class PostController {
 
     @DeleteMapping("/posts/{id}")
     public String deletePost(@PathVariable Long id,
-                          HttpServletRequest request,@RequestParam(required = false) String password){
+                          HttpServletRequest request,@RequestParam(required = false) String password,
+                          RedirectAttributes redirectAttributes){
         SessionMember loginMember = getLoginMember(request);
-        postService.deletePost(id, password, loginMember);
+        try{
+            postService.deletePost(id, password, loginMember);
+        }
+        catch (IllegalArgumentException e){
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/posts/" + id;
+        }
         return "redirect:/";
     }
 
     @PostMapping("/posts/{id}/edit")
     public String modifyPageRequestPost(@PathVariable Long id, Model model, HttpServletRequest request, @RequestParam(required = false) String password){
         SessionMember loginMember = getLoginMember(request);
-        postService.validateUpdatePageAccess(loginMember, id, password);
-        if (loginMember == null) {
+        try{
+            postService.validateUpdatePageAccess(loginMember, id, password);
+        }catch (IllegalArgumentException e){
+            model.addAttribute("errorMessage", e.getMessage());
+            Post post=postService.getPost(id);
+            model.addAttribute("post", post);
+            model.addAttribute("commentDto", new CommentDto());
+            model.addAttribute("loginMember", loginMember);
+            return "postView";
+        }
+
+        Post post=postService.getPost(id);
+        if (post.getMember()==null) {
+            //비회원이 작성한 글은 수정 페이지 요청시 이미 비밀번호에 대한 검증을 맞췄기 때문에
+            //실제 수정 요청시 비밀번호에 대한 검증을 통과했음을 식별 할 수 있는 세션값임
+            //만약 없을시 다른 유저가 patch요청을 직접 날려 글 수정 가능
             HttpSession session = request.getSession();
             session.setAttribute("guestEditVerifiedPostId", id);
         }
 
-        Post post=postService.getPost(id);
-        PostDto postdto=new PostDto();
+        PostDto postDto=new PostDto();
 
         model.addAttribute("loginMember", loginMember);
         model.addAttribute("post", post);
-        model.addAttribute("postdto", postdto);
+        model.addAttribute("postDto", postDto);
         return "postModify";
     }
 
     @PatchMapping("/posts/{id}")
-    public String modifyRequestPost(@PathVariable Long id, PostDto postdto, HttpServletRequest request){
+    public String modifyRequestPost(@PathVariable Long id,
+                                    @Valid @ModelAttribute("postDto") PostDto postDto,
+                                    BindingResult bindingResult,
+                                    HttpServletRequest request,
+                                    Model model){
         HttpSession session = request.getSession(false);
         SessionMember loginMember = getLoginMember(request);
+
         Long verifiedPostId = null;
         if (session != null) {
             verifiedPostId = (Long) session.getAttribute("guestEditVerifiedPostId");
         }
-        postService.validateUpdatePermission(loginMember,id,verifiedPostId);
-        postService.modifyPost(id, postdto);
+
+        if(bindingResult.hasErrors()){
+            Post post=postService.findPost(id);
+            model.addAttribute("post", post);
+            return "postModify";
+        }
+
+        try{
+            postService.validateUpdatePermission(loginMember,id,verifiedPostId);
+            postService.modifyPost(id, postDto);
+        }
+        catch(IllegalArgumentException e){
+            if ("작성자는 필수입니다.".equals(e.getMessage())) {
+                bindingResult.rejectValue("poster", "required", e.getMessage());
+            } else if ("내용은 필수입니다.".equals(e.getMessage())) {
+                bindingResult.rejectValue("content", "required", e.getMessage());
+            } else{
+                model.addAttribute("errorMessage", e.getMessage());
+            }
+            Post post=postService.findPost(id);
+            model.addAttribute("post", post);
+            return "postModify";
+        }
+
         if(verifiedPostId!=null) session.removeAttribute("guestEditVerifiedPostId");
 
         return "redirect:/posts/"+id;

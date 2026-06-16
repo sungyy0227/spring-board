@@ -3,6 +3,7 @@ package spring.board.dto;
 import spring.board.domain.Role;
 
 public class MemberDto {
+    //정규식 써야됨 어떻게쓰는진 몰?루
     private String loginId;
     private String password;
     private String nickname;

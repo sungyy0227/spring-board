@@ -27,6 +27,13 @@
 .deleteAndModify form{
   margin: 0;       /* form 기본 여백 제거 */
 }
+
+.post-action-error{
+  color: red;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
 table{
     width:800px;
 }

@@ -8,14 +8,23 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
 </head>
 <body>
-<form th:action="@{/posts/{id}(id=${post.id})}" method="post" enctype="multipart/form-data" id="post-form">
+<form th:action="@{/posts/{id}(id=${post.id})}" th:object="${postDto}" method="post" enctype="multipart/form-data" id="post-form">
     <input type="hidden" name="_method" value="patch">
     <table>
         <tr>
-            <td><input name="title" th:value="${post.title}"></td>
+            <td>
+                <input name="title" th:value="${post.title}">
+                <div th:if="${#fields.hasErrors('title')}"
+                     th:errors="*{title}"
+                     style="color:red;"></div>
+            </td>
             <td>
                 <input th:if="${post.member == null}" name="poster" th:value="${post.poster}">
                 <span th:if="${post.member != null}" th:text="${post.poster} + ' 님'"></span>
+                <input th:if="${post.member != null}" type="hidden" name="poster" th:value="${post.poster}">
+                <div th:if="${#fields.hasErrors('poster')}"
+                     th:errors="*{poster}"
+                     style="color:red;"></div>
             </td>
         </tr>
 
@@ -23,6 +32,9 @@
             <td colspan="2">
                 <div id="editor"></div>
                 <textarea id="content" name="content" hidden th:text="${post.content}"></textarea>
+                <div th:if="${#fields.hasErrors('content')}"
+                     th:errors="*{content}"
+                     style="color:red;"></div>
             </td>
         </tr>
 
@@ -32,6 +44,7 @@
            th:name="${_csrf.parameterName}"
            th:value="${_csrf.token}">
 </form>
+<div th:if="${errorMessage}" th:text="${errorMessage}" style="color:red;"></div> <!--테스트용-->
 <a th:href="@{/}">글목록</a>
 
 <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
@@ -81,7 +94,8 @@
     editor.setHTML(contentField.value || '');
 
     postForm.addEventListener('submit', function () {
-        contentField.value = editor.getHTML();
+        const markdown = editor.getMarkdown().trim();
+        contentField.value = markdown === '' ? '' : editor.getHTML();
 
         document.querySelectorAll('input[name="imageIds"]').forEach(input => input.remove());
 

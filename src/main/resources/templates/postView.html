@@ -65,6 +65,10 @@
                        th:name="${_csrf.parameterName}"
                        th:value="${_csrf.token}">
             </form>
+
+            <div th:if="${errorMessage != null}"
+                 th:text="${errorMessage}"
+                 class="post-action-error"></div>
         </div>
     </div>
 </div>
