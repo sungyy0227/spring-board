@@ -2,12 +2,11 @@ package spring.board.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -15,12 +14,11 @@ import spring.board.dto.EditorImageResponse;
 import spring.board.domain.Post;
 import spring.board.dto.CommentDto;
 import spring.board.dto.PostDto;
-import spring.board.dto.SessionMember;
+import spring.board.security.CustomUserDetails;
 import spring.board.service.CommentService;
 import spring.board.service.ImageService;
 import spring.board.service.MemberService;
 import spring.board.service.PostService;
-
 import java.io.IOException;
 
 
@@ -40,55 +38,67 @@ public class PostController {
     }
 
     @RequestMapping("/")
-    public String home(@RequestParam(defaultValue = "1") int page,Model model, HttpServletRequest request){
-        HttpSession session=request.getSession(false);
+    public String home(@RequestParam(defaultValue = "1") int page, Model model, HttpServletRequest request, @AuthenticationPrincipal CustomUserDetails loginMember){
         if(page<1) page=1;
-        Page<Post> postPage = postService.getPostPage(page);
-        addPostList(model, postPage, page, false);
-
-        if(session!=null){
-            SessionMember loginMember=(SessionMember) session.getAttribute("loginMember");
-            model.addAttribute("loginMember", loginMember);
-        }
+        addHomeModel(page,model,false);
+        addLoginMember(model,loginMember);
 
         return "index";
     }
 
-    @GetMapping("/posts/new")
-    public String postWrite(Model model, HttpServletRequest request){
-        SessionMember loginMember = getLoginMember(request);
-        model.addAttribute("loginMember", loginMember);
+    private void addHomeModel(int page, Model model, boolean searchMode) {
+        if (page < 1) {
+            page = 1;
+        }
 
-        model.addAttribute("postDto",new PostDto());
+        Page<Post> postPage = postService.getPostPage(page);
+        addPostList(model, postPage, page, searchMode);
+    }
+
+    private void addLoginMember(Model model, CustomUserDetails loginMember) {
+        if (loginMember != null) {
+            model.addAttribute("loginMember", loginMember);
+        }
+    }
+
+    @GetMapping("/posts/new")
+    public String postWrite(Model model, @AuthenticationPrincipal CustomUserDetails loginMember){
+        if(loginMember!=null){
+            model.addAttribute("loginMember", loginMember);
+        }
+
+        if (!model.containsAttribute("postDto")) {
+            model.addAttribute("postDto",new PostDto());
+        }
         return "postWrite";
     }
 
     @PostMapping("/clearPost")
-    public String delAllPost(){
+    public String delAllPost(){ //TODO: 개선 or 삭제
         postService.deleteAllAndResetId();
         return "redirect:/";
     }
 
     @PostMapping("/clearAll")
-    public String delAllPostAndMember(){
+    public String delAllPostAndMember(){ //TODO: 개선 or 삭제
         postService.deleteAllAndResetId();
         memberService.resetAllMember();
         return "redirect:/";
     }
 
     @PostMapping("/posts")
-    public String uploadPost(@Valid @ModelAttribute("postDto") PostDto postDto, BindingResult bindingResult,
-                             HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
-        SessionMember loginMember = getLoginMember(request);
-        if (bindingResult.hasErrors()) {
-            return "postWrite";
-        }
+    public String uploadPost(@ModelAttribute("postDto") PostDto postDto,
+                             HttpServletRequest request, Model model, RedirectAttributes redirectAttributes,
+                             @AuthenticationPrincipal CustomUserDetails loginMember) {
+        Long loginMemberId = loginMember == null ? null : loginMember.getId();
+
         try{
-            Long postId=postService.uploadPost(loginMember,postDto);
+            Long postId=postService.uploadPost(loginMemberId,postDto);
             return "redirect:/posts/" + postId;
         }
         catch(Exception e){
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("postErrorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("postDto", postDto);
             return "redirect:/posts/new";
         }
     }
@@ -100,9 +110,10 @@ public class PostController {
     }
 
     @GetMapping("/posts/{id}")
-    public String showPost(@PathVariable Long id,Model model, HttpServletRequest request){
+    public String showPost(@PathVariable Long id,Model model,
+                           @AuthenticationPrincipal CustomUserDetails loginMember){
         Post post=postService.getPostAndIncreaseViewCount(id);
-        SessionMember loginMember = getLoginMember(request);
+
         model.addAttribute("post",post);
         model.addAttribute("commentDto",new CommentDto());
         model.addAttribute("loginMember", loginMember);
@@ -111,11 +122,12 @@ public class PostController {
 
     @DeleteMapping("/posts/{id}")
     public String deletePost(@PathVariable Long id,
-                          HttpServletRequest request,@RequestParam(required = false) String password,
-                          RedirectAttributes redirectAttributes){
-        SessionMember loginMember = getLoginMember(request);
+                          @RequestParam(required = false) String password,
+                          RedirectAttributes redirectAttributes,@AuthenticationPrincipal CustomUserDetails loginMember){
+        Long loginMemberId = loginMember == null ? null : loginMember.getId();
+
         try{
-            postService.deletePost(id, password, loginMember);
+            postService.deletePost(id, password, loginMemberId);
         }
         catch (IllegalArgumentException e){
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -125,10 +137,12 @@ public class PostController {
     }
 
     @PostMapping("/posts/{id}/edit")
-    public String modifyPageRequestPost(@PathVariable Long id, Model model, HttpServletRequest request, @RequestParam(required = false) String password){
-        SessionMember loginMember = getLoginMember(request);
+    public String modifyPageRequestPost(@PathVariable Long id, Model model, HttpServletRequest request,
+                                        @RequestParam(required = false) String password,
+                                        @AuthenticationPrincipal CustomUserDetails loginMember){
+        Long loginMemberId = loginMember == null ? null : loginMember.getId();
         try{
-            postService.validateUpdatePageAccess(loginMember, id, password);
+            postService.validateUpdatePageAccess(loginMemberId, id, password);
         }catch (IllegalArgumentException e){
             model.addAttribute("errorMessage", e.getMessage());
             Post post=postService.getPost(id);
@@ -157,36 +171,24 @@ public class PostController {
 
     @PatchMapping("/posts/{id}")
     public String modifyRequestPost(@PathVariable Long id,
-                                    @Valid @ModelAttribute("postDto") PostDto postDto,
-                                    BindingResult bindingResult,
+                                    @ModelAttribute("postDto") PostDto postDto,
                                     HttpServletRequest request,
-                                    Model model){
+                                    Model model,
+                                    @AuthenticationPrincipal CustomUserDetails loginMember){
         HttpSession session = request.getSession(false);
-        SessionMember loginMember = getLoginMember(request);
 
         Long verifiedPostId = null;
         if (session != null) {
             verifiedPostId = (Long) session.getAttribute("guestEditVerifiedPostId");
         }
 
-        if(bindingResult.hasErrors()){
-            Post post=postService.findPost(id);
-            model.addAttribute("post", post);
-            return "postModify";
-        }
-
+        Long loginMemberId = loginMember == null ? null : loginMember.getId();
         try{
-            postService.validateUpdatePermission(loginMember,id,verifiedPostId);
+            postService.validateUpdatePermission(loginMemberId,id,verifiedPostId);
             postService.modifyPost(id, postDto);
         }
         catch(IllegalArgumentException e){
-            if ("작성자는 필수입니다.".equals(e.getMessage())) {
-                bindingResult.rejectValue("poster", "required", e.getMessage());
-            } else if ("내용은 필수입니다.".equals(e.getMessage())) {
-                bindingResult.rejectValue("content", "required", e.getMessage());
-            } else{
-                model.addAttribute("errorMessage", e.getMessage());
-            }
+            model.addAttribute("errorMessage", e.getMessage());
             Post post=postService.findPost(id);
             model.addAttribute("post", post);
             return "postModify";
@@ -198,19 +200,28 @@ public class PostController {
     }
 
     @PostMapping("/posts/{id}/comments")
-    public String addComment(@PathVariable Long id, @ModelAttribute CommentDto commentDto, HttpServletRequest request){
-        SessionMember loginMember = getLoginMember(request);
-        commentService.addComment(id, commentDto, loginMember);
+    public String addComment(@PathVariable Long id, @ModelAttribute CommentDto commentDto, HttpServletRequest request,
+                             RedirectAttributes redirectAttributes,
+                             @AuthenticationPrincipal CustomUserDetails loginMember){
+        Long loginMemberId = loginMember == null ? null : loginMember.getId();
+        try{
+            commentService.addComment(id, commentDto, loginMemberId);
+        }
+        catch(IllegalArgumentException e){
+            redirectAttributes.addFlashAttribute("commentErrorMessage", e.getMessage());
+        }
 
         return "redirect:/posts/"+id;
     }
 
     @DeleteMapping("/posts/{postId}/comments/{commentId}")
     public String deleteComment(@PathVariable Long postId, @PathVariable Long commentId, RedirectAttributes redirectAttributes,
-                                HttpServletRequest request, @RequestParam(required = false) String guestRawPassword){
-        SessionMember loginMember = getLoginMember(request);
+                                @RequestParam(required = false) String guestRawPassword,
+                                @AuthenticationPrincipal CustomUserDetails loginMember){
+        Long loginMemberId = loginMember == null ? null : loginMember.getId();
+
         try{
-            commentService.deleteComment(postId, commentId, loginMember, guestRawPassword);
+            commentService.deleteComment(postId, commentId, loginMemberId, guestRawPassword);
         }
         catch(IllegalArgumentException e){
             redirectAttributes.addFlashAttribute("commentError", e.getMessage());
@@ -218,21 +229,12 @@ public class PostController {
         return "redirect:/posts/" + postId;
     }
 
-    private SessionMember getLoginMember(HttpServletRequest request){
-        HttpSession session = request.getSession(false);
-        SessionMember loginMember = null;
-
-        if (session != null) {
-            loginMember = (SessionMember) session.getAttribute("loginMember");
-        }
-        return loginMember;
-    }
-
     @GetMapping("/posts")
     public String searchPost(
             @RequestParam String type,
             @RequestParam String keyword,
-            @RequestParam(defaultValue = "1") int page, Model model, HttpServletRequest request){
+            @RequestParam(defaultValue = "1") int page, Model model,
+            @AuthenticationPrincipal CustomUserDetails loginMember){
         if(page<1) page=1;
         Page<Post> postPage = postService.searchPosts(type, keyword, page);
         model.addAttribute("keyword", keyword);
@@ -242,7 +244,8 @@ public class PostController {
             addPostList(model,postPage,page,true);
         }
         catch (IllegalArgumentException e){
-            home(1, model, request);
+            addHomeModel(1,model,false);
+            addLoginMember(model,loginMember);
             model.addAttribute("searchErrorMessage", e.getMessage());
             model.addAttribute("searchMode", false);
         }

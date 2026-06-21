@@ -1,16 +1,18 @@
 package spring.board.service;
 
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring.board.domain.Role;
 import spring.board.domain.Status;
 import spring.board.dto.MemberDto;
 import spring.board.domain.Member;
-import spring.board.dto.SessionMember;
+import spring.board.dto.SignupValidationError;
 import spring.board.repository.MemberRepository;
 import spring.board.repository.PostRepository;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Transactional
@@ -29,15 +31,12 @@ public class MemberService {
         memberRepository.deleteById(id);
     }
 
-    public void signup(MemberDto memberDto){
-        if(memberRepository.existsByLoginId(memberDto.getLoginId())){
-            throw new IllegalArgumentException("이미 사용중인 아이디 입니다.");
+    //회원가입, 입력값 검증
+    public List<SignupValidationError> signup(MemberDto memberDto){
+        List<SignupValidationError> validationErrors = signupValidation(memberDto);
+        if(!validationErrors.isEmpty()){
+            return validationErrors;
         }
-
-        if(memberRepository.existsByNickname(memberDto.getNickname())){
-            throw new IllegalArgumentException("이미 사용중인 닉네임 입니다.");
-        }   
-
         Member member=new Member();
         member.setLoginId(memberDto.getLoginId());
         member.setPassword(passwordEncoder.encode(memberDto.getPassword()));
@@ -46,23 +45,43 @@ public class MemberService {
         member.setStatus(Status.ACTIVE);
         
         memberRepository.save(member);
+        return validationErrors;
+    }
+
+    //회원가입 요청시 입력 값 검증
+    public List<SignupValidationError> signupValidation(MemberDto memberDto){
+        List<SignupValidationError> validationErrors = new ArrayList<>();
+        String loginId = memberDto.getLoginId() == null ? "" : memberDto.getLoginId();
+        String password = memberDto.getPassword() == null ? "" : memberDto.getPassword();
+        String nickname = memberDto.getNickname() == null ? "" : memberDto.getNickname();
+
+        if(!loginId.matches("^[a-zA-Z0-9]{5,20}$")){ //아이디 길이 검사
+            validationErrors.add(new SignupValidationError("loginId",
+                    "invalid.loginId", "아이디는 영문과 숫자만 사용해서 5~20자로 입력해야 합니다."));
+        }
+        if(!password.matches("^[A-Za-z0-9]{6,20}$")){ //비밀번호 유효성 검사
+            validationErrors.add(new SignupValidationError("password",
+                    "invalid.password", "비밀번호는 영문과 숫자만 사용해서 6~20자로 입력해야 합니다."));
+        }
+        if(memberRepository.existsByLoginId(loginId)){ //아이디 중복 검사
+            validationErrors.add(new SignupValidationError("loginId",
+                    "duplicate.loginId", "이미 사용 중인 아이디입니다."));
+        }
+        if(memberRepository.existsByNickname(nickname)){ //닉네임 중복 검사
+            validationErrors.add(new SignupValidationError("nickname",
+                    "duplicate.nickname", "이미 사용 중인 닉네임입니다."));
+        }
+        if(!nickname.matches("^[가-힣a-zA-Z0-9_]{2,12}$")){
+            validationErrors.add(new SignupValidationError("nickname",
+                    "invalid.nickname", "닉네임은 한글, 영문, 숫자, _만 사용해서 2~12자로 입력해야 합니다."));
+        }
+
+        return validationErrors;
     }
 
     public void resetAllMember(){
         memberRepository.deleteAllNative();
         memberRepository.resetId();
-    }
-
-    public Member login(String loginId, String rawPassword){
-        Member member=memberRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다."));
-        if(!passwordEncoder.matches(rawPassword, member.getPassword())){
-            throw new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.");
-        }
-        if(member.isWithdrawn()){
-            throw new IllegalArgumentException("탈퇴한 회원입니다. 로그인이 불가능합니다.");
-        }
-        return member;
     }
 
     public Member findByLoginId(String keyword){
@@ -92,7 +111,7 @@ public class MemberService {
 
 
     //관리자용 서비스
-    public Member findMember(String keyword,String mode){
+    public Member findMemberByKeyword(String keyword,String mode){
         Member member=null;
         if (keyword == null || keyword.isBlank()) {
             throw new IllegalArgumentException("검색어를 입력해주세요.");

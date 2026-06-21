@@ -1,10 +1,18 @@
 package spring.board.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,10 +23,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import spring.board.domain.Comment;
 import spring.board.domain.Member;
 import spring.board.domain.Post;
-import spring.board.dto.LoginDto;
 import spring.board.dto.MemberDto;
-import spring.board.dto.SessionMember;
+import spring.board.dto.SignupValidationError;
 import spring.board.repository.MemberRepository;
+import spring.board.security.CustomUserDetails;
 import spring.board.service.CommentService;
 import spring.board.service.MemberService;
 import spring.board.service.PostService;
@@ -42,55 +50,28 @@ public class MemberController {
     }
 
     @GetMapping("/login")
-    public String loginPage(Model model){
-        model.addAttribute("loginDto",new LoginDto());
+    public String loginPage(){
         return "login";
     }
 
     @GetMapping("/login/signup")
     public String signupPage(Model model){
-        model.addAttribute("memberdto",new MemberDto());
+        model.addAttribute("memberDto",new MemberDto());
         return "signup";
     }
 
     @PostMapping("/login/signup")
-    public String signup(MemberDto memberDto,RedirectAttributes redirectAttributes){
-        try{
-            memberService.signup(memberDto);
+    public String signup(MemberDto memberDto,RedirectAttributes redirectAttributes, Model model){
+        List<SignupValidationError> validationErrors = memberService.signup(memberDto);
+        if(validationErrors.isEmpty()){ //회원가입 검증 성공
             redirectAttributes.addFlashAttribute("successMessage", "회원가입이 완료되었습니다.");
             return "redirect:/login";
         }
-        catch (IllegalArgumentException e){
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/login/signup";
-        }
+        model.addAttribute("validationErrors", validationErrors);
+        model.addAttribute("memberDto", memberDto);
+        return "signup";
+
     }
-    /*Spring Security로 전환*/
-//    @PostMapping("/login")
-//    public String login(LoginDto loginDto, HttpServletRequest request, RedirectAttributes redirectAttributes){
-//        try{
-//            Member member= memberService.login(loginDto.getLoginId(),loginDto.getPassword());
-//
-//            //세션 생성, 없으면 만들고 있으면 기존꺼 사용
-//            HttpSession session=request.getSession(true);
-//            SessionMember sessionMember=new SessionMember(member.getId(), member.getLoginId(), member.getNickname(), member.getRole());
-//            session.setAttribute("loginMember",sessionMember);
-//
-//            return "redirect:/";
-//        }catch(IllegalArgumentException e){
-//            redirectAttributes.addFlashAttribute("loginError", e.getMessage());
-//            return "redirect:/login";
-//        }
-//    }
-//
-//    @PostMapping("/logout")
-//    public String logout(HttpServletRequest request){
-//        HttpSession session=request.getSession(false);
-//        if(session!= null){
-//            session.invalidate();
-//        }
-//        return "redirect:/";
-//    }
 
     @GetMapping("/admin")
     public String admin(){
@@ -104,7 +85,7 @@ public class MemberController {
             Model model
     ) {
         try{
-            Member member=memberService.findMember(keyword,mode);
+            Member member=memberService.findMemberByKeyword(keyword,mode);
             model.addAttribute("member",member);
         }
         catch (IllegalArgumentException e){
@@ -114,37 +95,43 @@ public class MemberController {
     }
 
     @PostMapping("/admin/members/{id}/grant-admin")
-    public String grantAdmin(@PathVariable Long id, HttpServletRequest request){
+    public String grantAdmin(@PathVariable Long id, HttpServletRequest request,
+                             HttpServletResponse response,
+                             @AuthenticationPrincipal CustomUserDetails loginMember){
         memberService.grantAdmin(id);
-        refreshLoginMemberSession(request);
+        if (loginMember != null ) {
+            Member refreshedMember = memberService.findById(loginMember.getId());
+            refreshAuthentication(refreshedMember, request, response);
+        }
         return "redirect:/admin/members/"+id;
     }
 
     @PostMapping("/admin/members/{id}/remove-admin")
-    public String removeAdmin(@PathVariable Long id, HttpServletRequest request){
+    public String removeAdmin(@PathVariable Long id, HttpServletRequest request,
+                              HttpServletResponse response,
+                              @AuthenticationPrincipal CustomUserDetails loginMember){
         memberService.removeAdmin(id);
-        refreshLoginMemberSession(request);
+        if (loginMember != null ) {
+            Member refreshedMember = memberService.findById(loginMember.getId());
+            refreshAuthentication(refreshedMember, request, response);
+        }
         return "redirect:/admin/members/"+id;
     }
 
-    private void refreshLoginMemberSession(HttpServletRequest request){ // 현재 요청을 보낸 사용자의 세션 정보를 DB 기준으로 갱신
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            return;
-        }
-        SessionMember loginMember = (SessionMember) session.getAttribute("loginMember");
+    private void refreshAuthentication(Member member, HttpServletRequest request,
+                                       HttpServletResponse response){
+        CustomUserDetails newPrincipal = new CustomUserDetails(member);
 
-        if(loginMember==null){
-            return;
-        }
+        Authentication newAuthentication = new UsernamePasswordAuthenticationToken(
+                newPrincipal, null, newPrincipal.getAuthorities()
+        );
 
-        Member member=memberService.findById(loginMember.getId());
-        loginMember.setRole(member.getRole());
-        loginMember.setLoginId(member.getLoginId());
-        loginMember.setId(member.getId());
-        loginMember.setNickname(member.getNickname());
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(newAuthentication);
+        SecurityContextHolder.setContext(context);
 
-        session.setAttribute("loginMember", loginMember);
+        new HttpSessionSecurityContextRepository()
+                .saveContext(context, request, response);
     }
 
     @GetMapping("/admin/members/{id}")
@@ -166,8 +153,7 @@ public class MemberController {
     }
 
     @GetMapping("/mypage")
-    public String myPage(Model model, HttpServletRequest request){
-        SessionMember loginMember = getLoginMember(request);
+    public String myPage(Model model, @AuthenticationPrincipal CustomUserDetails loginMember){
         if (loginMember==null){
             return "redirect:/";
         }
@@ -187,26 +173,14 @@ public class MemberController {
         return "mypage";
     }
 
-
-
-    private SessionMember getLoginMember(HttpServletRequest request){
-        HttpSession session = request.getSession(false);
-        SessionMember loginMember = null;
-
-        if (session != null) {
-            loginMember = (SessionMember) session.getAttribute("loginMember");
-        }
-        return loginMember;
-    }
-
-    @GetMapping("/mypage/withdraw")
+    @GetMapping("/mypage/withdraw") //mypage는 시큐리티로 url을 막을거여서 따로 인가조치가 필요없음
     public String withdrawPageRequest(){
         return "withdraw";
     }
 
     @PostMapping("/mypage/withdraw")
-    public String withdrawMember(@RequestParam String password, HttpServletRequest request,RedirectAttributes redirectAttributes) {
-        SessionMember loginMember = getLoginMember(request);
+    public String withdrawMember(@RequestParam String password, HttpServletRequest request, RedirectAttributes redirectAttributes,
+                                 @AuthenticationPrincipal CustomUserDetails loginMember, HttpServletResponse response) {
 
         if (loginMember == null) {
             return "redirect:/login";
@@ -218,9 +192,11 @@ public class MemberController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/mypage/withdraw";
         }
-        HttpSession session=request.getSession(false);
-        if(session!= null){
-            session.invalidate();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if(authentication!=null){
+            new SecurityContextLogoutHandler().logout(request,response,authentication);
         }
         return "redirect:/";
     }

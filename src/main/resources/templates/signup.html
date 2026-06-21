@@ -5,10 +5,28 @@
     <title>회원가입</title>
 </head>
 <body>
-<form th:action="@{/login/signup}" th:object="${memberdto}" method="post">
-    <input type="text" name="loginId" placeholder="아이디"><br><br>
-    <input type="password" name="password" placeholder="비밀번호"><br><br>
-    <input type="text" name="nickname" placeholder="닉네임"><br>
+<form th:action="@{/login/signup}" th:object="${memberDto}" method="post">
+    <input type="text" th:field="*{loginId}" placeholder="아이디">
+    <div th:each="error : ${validationErrors}"
+         th:if="${error.fieldName == 'loginId'}"
+         th:text="${error.errorMessage}"
+         style="color:red;"></div>
+    <br>
+
+    <input type="password" name="password" placeholder="비밀번호">
+    <div th:each="error : ${validationErrors}"
+         th:if="${error.fieldName == 'password'}"
+         th:text="${error.errorMessage}"
+         style="color:red;"></div>
+    <br>
+
+    <input type="text" th:field="*{nickname}" placeholder="닉네임">
+    <div th:each="error : ${validationErrors}"
+         th:if="${error.fieldName == 'nickname'}"
+         th:text="${error.errorMessage}"
+         style="color:red;"></div>
+    <br>
+
     <button type="submit">회원가입</button>
     <input type="hidden"
            th:name="${_csrf.parameterName}"

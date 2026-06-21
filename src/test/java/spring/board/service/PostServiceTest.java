@@ -8,8 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.board.domain.Member;
 import spring.board.domain.Post;
 import spring.board.domain.Role;
-import spring.board.domain.Status;
-import spring.board.dto.SessionMember;
+import spring.board.domain.Status;;
 import spring.board.repository.MemberRepository;
 import spring.board.repository.PostRepository;
 
@@ -57,7 +56,7 @@ class PostServiceTest {
         Member owner = saveMember("owner", "owner nickname");
         Post post = saveMemberPost(owner);
 
-        postService.deletePost(post.getId(), null, toSessionMember(owner));
+        postService.deletePost(post.getId(), null, owner.getId());
 
         assertThat(postRepository.findById(post.getId())).isEmpty();
     }
@@ -68,7 +67,7 @@ class PostServiceTest {
         Member other = saveMember("other", "other nickname");
         Post post = saveMemberPost(owner);
 
-        assertThatThrownBy(() -> postService.deletePost(post.getId(), null, toSessionMember(other)))
+        assertThatThrownBy(() -> postService.deletePost(post.getId(), null, other.getId()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("삭제 권한 없음");
 
@@ -95,7 +94,7 @@ class PostServiceTest {
         Member owner = saveMember("owner", "owner nickname");
         Post post=saveMemberPost(owner);
 
-        postService.deletePost(post.getId(), null, toSessionMember(admin));
+        postService.deletePost(post.getId(), null, admin.getId());
         assertThat(postRepository.findById(post.getId())).isEmpty();
     }
 
@@ -126,10 +125,5 @@ class PostServiceTest {
         member.setStatus(Status.ACTIVE);
         return memberRepository.save(member);
     }
-
-    private SessionMember toSessionMember(Member member) {
-        return new SessionMember(member.getId(), member.getLoginId(), member.getNickname(), member.getRole());
-    }
-
 
 }

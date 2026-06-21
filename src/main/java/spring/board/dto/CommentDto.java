@@ -8,10 +8,8 @@ public class CommentDto {
     //작성자 검증은 서비스에서 함
     private String commenter;
 
-    @NotBlank(message = "내용은 필수입니다.")
     private String commentContent;
 
-    @NotBlank(message = "비밀번호는 필수입니다.")
     private String guestRawPassword;
 
     public String getGuestRawPassword() {

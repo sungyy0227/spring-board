@@ -32,6 +32,10 @@ public class CustomUserDetails implements UserDetails {
         return member.getRole();
     }
 
+    public boolean isAdmin(){
+        return member.getRole() == Role.ADMIN;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()));

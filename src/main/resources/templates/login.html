@@ -5,7 +5,7 @@
     <title>로그인</title>
 </head>
 <body>
-    <form th:action="@{/login}" th:object="${memberdto}" method="post">
+    <form th:action="@{/login}" method="post">
         <input type="text" name="loginId" placeholder="아이디"><br><br>
         <input type="password" name="password" placeholder="비밀번호"><br><br>
         <button type="submit">로그인</button>
@@ -13,8 +13,8 @@
                th:name="${_csrf.parameterName}"
                th:value="${_csrf.token}">
     </form>
-    <div th:if="${loginError != null}">
-        <h3 th:text="${loginError}" style="color: red"></h3>
+    <div th:if="${param.error}">
+        <h3 style="color: red">아이디 또는 비밀번호가 올바르지 않습니다.</h3>
     </div>
 <a th:href="@{/login/signup}">회원가입</a>
         <div th:if="${successMessage}" th:text="${successMessage}" style="color:green;"></div>

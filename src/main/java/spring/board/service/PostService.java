@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import spring.board.dto.PostDto;
 import spring.board.domain.Image;
-import spring.board.dto.SessionMember;
 import spring.board.domain.Member;
 import spring.board.domain.Post;
 import spring.board.repository.CommentRepository;
@@ -44,22 +43,26 @@ public class PostService {
         this.imageService = imageService;
     }
 
-    public void deletePost(Long id, String password, SessionMember loginMember){
+    public void deletePost(Long id, String password, Long loginMemberId){
         Post post = postRepository.findById(id).orElseThrow(
                 () -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
+        Member loginMember=null;
 
-        if(loginMember!=null && loginMember.isAdmin()){ //1. 관리자일 경우 무조건 삭제
-            deletePostImages(post.getId());
-            postRepository.delete(post);
-            return;
+        if(loginMemberId!=null){ //1. 관리자일 경우 무조건 삭제
+            loginMember = memberRepository.findById(loginMemberId).orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
+            if(loginMember.isAdmin()){
+                deletePostImages(post.getId());
+                postRepository.delete(post);
+                return;
+            }
         }
 
         if(post.getMember()!=null){ //2. 게시물 작성자가 회원일 경우
-            if (loginMember == null) {
-                throw new IllegalArgumentException("삭제 권한 없습니다.");
+            if (loginMember==null) {
+                throw new IllegalArgumentException("삭제 권한이 없습니다.");
             }
             if(!post.getMember().getId().equals(loginMember.getId())){
-                throw new IllegalArgumentException("삭제 권한 없습니다.");
+                throw new IllegalArgumentException("삭제 권한이 없습니다.");
             }
         }
         else{ //3. 게시물 작성자가 게스트(비로그인)일 경우
@@ -109,22 +112,33 @@ public class PostService {
                 .and(Sanitizers.LINKS)
                 .and(Sanitizers.IMAGES);
 
-        if(post.getMember()==null){
-            if(!StringUtils.hasText(postdto.getPoster())){
-                throw new IllegalArgumentException("작성자는 필수입니다.");
-            }
+        //수정은 비밀번호 필요 X
+        if(post.getMember()==null){ //비회원이 작성했던 글
+            validatePostDto(postdto,true,false);
             post.setPoster(postdto.getPoster());
         }
+        else{ //회원이 작성했던 글
+            validatePostDto(postdto,false,false);
+        }
 
-        validateContent(postdto.getContent());
         connectImagesToPost(postdto.getImageIds(), post);
         post.setTitle(postdto.getTitle());
         post.setContent(policy.sanitize(postdto.getContent()));
     }
 
-    private void validateContent(String content){
-        if(!hasTextContent(content)){
+    //postDto 입력 값 검증 메소드, 파라미터는 (postDto, 작성자 값 검사 여부, 비밀번호 검사 여부)
+    private void validatePostDto(PostDto postDto, boolean requirePoster, boolean requireGuestPassword){
+        if (!StringUtils.hasText(postDto.getTitle())) {
+            throw new IllegalArgumentException("제목은 필수입니다.");
+        }
+        if (!hasTextContent(postDto.getContent())) {
             throw new IllegalArgumentException("내용은 필수입니다.");
+        }
+        if (requirePoster && !StringUtils.hasText(postDto.getPoster())) {
+            throw new IllegalArgumentException("작성자는 필수입니다.");
+        }
+        if (requireGuestPassword && !StringUtils.hasText(postDto.getGuestPassword())) {
+            throw new IllegalArgumentException("비밀번호는 필수입니다.");
         }
     }
 
@@ -152,32 +166,31 @@ public class PostService {
         postRepository.resetId();
     }
 
-    public Long uploadPost(SessionMember loginMember, PostDto postDto) throws IOException {
+    public Long uploadPost(Long id, PostDto postDto) throws IOException {
+
         Post post = new Post();
         PolicyFactory policy = Sanitizers.FORMATTING
                 .and(Sanitizers.BLOCKS)
                 .and(Sanitizers.LINKS)
                 .and(Sanitizers.IMAGES);
 
-        if (loginMember!=null){
-            post.setPoster(loginMember.getNickname());
-            Member member = memberRepository.findById(loginMember.getId()).orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
+        if (id!=null){ //작성자가 회원일때
+            Member member = memberRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
+            validatePostDto(postDto, false, false);
+            post.setPoster(member.getNickname());
             post.setMember(member);
         }
-        else{
+        else{ //작성자가 비회원일때
+            validatePostDto(postDto,true,true);
             post.setPoster(postDto.getPoster());
             post.setGuestPassword(passwordEncoder.encode(postDto.getGuestPassword()));
         }
-        try{
-            post.setTitle(postDto.getTitle());
-            post.setContent(policy.sanitize(postDto.getContent()));
-            post.setCreatedAt(LocalDateTime.now());
-            postRepository.save(post);
-            connectImagesToPost(postDto.getImageIds(), post);
-        }
-        catch(Exception e){
-            throw e;
-        }
+
+        post.setTitle(postDto.getTitle());
+        post.setContent(policy.sanitize(postDto.getContent()));
+        post.setCreatedAt(LocalDateTime.now());
+        postRepository.save(post);
+        connectImagesToPost(postDto.getImageIds(), post);
 
         return post.getId();
     }
@@ -201,15 +214,15 @@ public class PostService {
     }
 
     //수정 페이지 요청용 권한 확인
-    public void validateUpdatePageAccess(SessionMember loginMember, Long postId, String guestPassword){
-        //회원일경우
+    public void validateUpdatePageAccess(Long loginMemberId, Long postId, String guestPassword){
         Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
-        if(post.getMember()!=null){
-            if(loginMember == null || !loginMember.getId().equals(post.getMember().getId())){
+
+        if (post.getMember() != null) { //게시물 작성자가 회원일경우
+            if (loginMemberId == null || !loginMemberId.equals(post.getMember().getId())) {
                 throw new IllegalArgumentException("해당 게시물에 대한 수정 권한이 존재하지 않습니다.");
             }
-        }//비회원일경우
-        else{
+        }
+        else{ //비회원일경우
             if(guestPassword==null || !passwordEncoder.matches(guestPassword,post.getGuestPassword())){
                 throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
             }
@@ -217,11 +230,11 @@ public class PostService {
     }
 
     //수정 요청용 권한 확인
-    public void validateUpdatePermission(SessionMember loginMember,Long postId, Long verifiedPostId){
+    public void validateUpdatePermission(Long loginMemberId,Long postId, Long verifiedPostId){
         Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
         //회원일경우
         if(post.getMember()!=null){
-            if(loginMember == null || !loginMember.getId().equals(post.getMember().getId())){
+            if(loginMemberId == null || !loginMemberId.equals(post.getMember().getId())){
                 throw new IllegalArgumentException("해당 게시물에 대한 수정 권한이 존재하지 않습니다.");
             }
         }//비회원일경우
