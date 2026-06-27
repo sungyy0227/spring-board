@@ -5,7 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring.board.domain.Role;
 import spring.board.domain.Status;
-import spring.board.dto.MemberDto;
+import spring.board.dto.SignupForm;
 import spring.board.domain.Member;
 import spring.board.dto.SignupValidationError;
 import spring.board.repository.MemberRepository;
@@ -32,15 +32,15 @@ public class MemberService {
     }
 
     //회원가입, 입력값 검증
-    public List<SignupValidationError> signup(MemberDto memberDto){
-        List<SignupValidationError> validationErrors = signupValidation(memberDto);
+    public List<SignupValidationError> signup(SignupForm signupForm){
+        List<SignupValidationError> validationErrors = signupValidation(signupForm);
         if(!validationErrors.isEmpty()){
             return validationErrors;
         }
         Member member=new Member();
-        member.setLoginId(memberDto.getLoginId());
-        member.setPassword(passwordEncoder.encode(memberDto.getPassword()));
-        member.setNickname(memberDto.getNickname());
+        member.setLoginId(signupForm.getLoginId());
+        member.setPassword(passwordEncoder.encode(signupForm.getPassword()));
+        member.setNickname(signupForm.getNickname());
         member.setRole(Role.USER);
         member.setStatus(Status.ACTIVE);
         
@@ -49,11 +49,11 @@ public class MemberService {
     }
 
     //회원가입 요청시 입력 값 검증
-    public List<SignupValidationError> signupValidation(MemberDto memberDto){
+    public List<SignupValidationError> signupValidation(SignupForm signupForm){
         List<SignupValidationError> validationErrors = new ArrayList<>();
-        String loginId = memberDto.getLoginId() == null ? "" : memberDto.getLoginId();
-        String password = memberDto.getPassword() == null ? "" : memberDto.getPassword();
-        String nickname = memberDto.getNickname() == null ? "" : memberDto.getNickname();
+        String loginId = signupForm.getLoginId() == null ? "" : signupForm.getLoginId();
+        String password = signupForm.getPassword() == null ? "" : signupForm.getPassword();
+        String nickname = signupForm.getNickname() == null ? "" : signupForm.getNickname();
 
         if(!loginId.matches("^[a-zA-Z0-9]{5,20}$")){ //아이디 길이 검사
             validationErrors.add(new SignupValidationError("loginId",

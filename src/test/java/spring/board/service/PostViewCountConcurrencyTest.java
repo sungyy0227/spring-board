@@ -1,5 +1,6 @@
 package spring.board.service;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,6 +26,7 @@ class PostViewCountConcurrencyTest {
     PostRepository postRepository;
 
     @Test
+    @DisplayName("동시 요청에서도 조회수가 정확히 증가한다")
     void viewCountIncreasesExactlyUnderConcurrentRequests() throws InterruptedException {
         int requestCount = 100_000;
         int threadCount = 100;

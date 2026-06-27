@@ -2,6 +2,7 @@ package spring.board.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,7 +26,13 @@ public class SecurityConfig {
                         .loginProcessingUrl("/login")
                         .usernameParameter("loginId")
                         .passwordParameter("password")
-                        .failureUrl("/login?error")
+                        .failureHandler((request, response, exception) -> {
+                            if (exception instanceof DisabledException) {
+                                response.sendRedirect("/login?error=withdrawn");
+                                return;
+                            }
+                            response.sendRedirect("/login?error");
+                        })
                         .permitAll()
                 )
                 .logout(logout -> logout

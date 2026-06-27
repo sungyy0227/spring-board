@@ -13,7 +13,10 @@ public class Post {
     private Long id;
 
     private String title;
+
+    @Lob
     private String content;
+
     private String poster;
     private int viewCount;
     private String guestPassword;

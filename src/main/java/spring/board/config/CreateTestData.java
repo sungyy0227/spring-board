@@ -20,7 +20,7 @@ public class CreateTestData implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (postRepository.count() > 300) {
+        if (postRepository.count() >= 300) { //임시조치임 개발용으로 따로 빼거나 없앨거
             return;
         }
 

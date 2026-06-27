@@ -2,7 +2,6 @@ package spring.board.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import spring.board.domain.Comment;
 import spring.board.domain.Member;
 import spring.board.domain.Post;
-import spring.board.dto.MemberDto;
+import spring.board.dto.SignupForm;
 import spring.board.dto.SignupValidationError;
 import spring.board.repository.MemberRepository;
 import spring.board.security.CustomUserDetails;
@@ -39,14 +38,12 @@ public class MemberController {
     private final PostService postService;
     private final CommentService commentService;
     private final MemberService memberService;
-    private final MemberRepository memberRepository;
 
     @Autowired
-    public MemberController(PostService postService, CommentService commentService, MemberService memberService, MemberRepository memberRepository) {
+    public MemberController(PostService postService, CommentService commentService, MemberService memberService) {
         this.postService = postService;
         this.commentService=commentService;
         this.memberService=memberService;
-        this.memberRepository = memberRepository;
     }
 
     @GetMapping("/login")
@@ -56,19 +53,19 @@ public class MemberController {
 
     @GetMapping("/login/signup")
     public String signupPage(Model model){
-        model.addAttribute("memberDto",new MemberDto());
+        model.addAttribute("signupForm",new SignupForm());
         return "signup";
     }
 
     @PostMapping("/login/signup")
-    public String signup(MemberDto memberDto,RedirectAttributes redirectAttributes, Model model){
-        List<SignupValidationError> validationErrors = memberService.signup(memberDto);
+    public String signup(SignupForm signupForm, RedirectAttributes redirectAttributes, Model model){
+        List<SignupValidationError> validationErrors = memberService.signup(signupForm);
         if(validationErrors.isEmpty()){ //회원가입 검증 성공
             redirectAttributes.addFlashAttribute("successMessage", "회원가입이 완료되었습니다.");
             return "redirect:/login";
         }
         model.addAttribute("validationErrors", validationErrors);
-        model.addAttribute("memberDto", memberDto);
+        model.addAttribute("signupForm", signupForm);
         return "signup";
 
     }

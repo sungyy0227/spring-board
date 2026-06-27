@@ -5,7 +5,7 @@
     <title>회원가입</title>
 </head>
 <body>
-<form th:action="@{/login/signup}" th:object="${memberDto}" method="post">
+<form th:action="@{/login/signup}" th:object="${signupForm}" method="post">
     <input type="text" th:field="*{loginId}" placeholder="아이디">
     <div th:each="error : ${validationErrors}"
          th:if="${error.fieldName == 'loginId'}"
