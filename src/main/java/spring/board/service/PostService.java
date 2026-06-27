@@ -94,7 +94,7 @@ public class PostService {
 
     public Post getPost(long id){
         return postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다"));
+                .orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
     }
 
     public List<Post> getAllPost(){
@@ -105,7 +105,7 @@ public class PostService {
         postRepository.deleteAll();
     }
 
-    public void modifyPost(long id, PostDto postdto){
+    public void modifyPost(long id, PostDto postdto, Long loginMemberId, String draftToken){
         Post post = postRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
         PolicyFactory policy = Sanitizers.FORMATTING
                 .and(Sanitizers.BLOCKS)
@@ -121,7 +121,7 @@ public class PostService {
             validatePostDto(postdto,false,false);
         }
 
-        connectImagesToPost(postdto.getImageIds(), post);
+        connectImagesToPost(postdto.getImageIds(), post, loginMemberId, draftToken);
         post.setTitle(postdto.getTitle());
         post.setContent(policy.sanitize(postdto.getContent()));
     }
@@ -166,7 +166,7 @@ public class PostService {
         postRepository.resetId();
     }
 
-    public Long uploadPost(Long id, PostDto postDto) throws IOException {
+    public Long uploadPost(Long loginMemberId, PostDto postDto, String draftToken) throws IOException {
 
         Post post = new Post();
         PolicyFactory policy = Sanitizers.FORMATTING
@@ -174,8 +174,8 @@ public class PostService {
                 .and(Sanitizers.LINKS)
                 .and(Sanitizers.IMAGES);
 
-        if (id!=null){ //작성자가 회원일때
-            Member member = memberRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
+        if (loginMemberId !=null){ //작성자가 회원일때
+            Member member = memberRepository.findById(loginMemberId).orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
             validatePostDto(postDto, false, false);
             post.setPoster(member.getNickname());
             post.setMember(member);
@@ -190,22 +190,65 @@ public class PostService {
         post.setContent(policy.sanitize(postDto.getContent()));
         post.setCreatedAt(LocalDateTime.now());
         postRepository.save(post);
-        connectImagesToPost(postDto.getImageIds(), post);
+        connectImagesToPost(postDto.getImageIds(), post, loginMemberId,draftToken);
 
         return post.getId();
     }
 
-    private void connectImagesToPost(List<Long> imageIds, Post post) {
+    private void connectImagesToPost(List<Long> imageIds, Post post,Long loginMemberId ,String draftToken) {
         if (imageIds == null || imageIds.isEmpty()) {
             return;
         }
 
         List<Image> images = imageRepository.findAllById(imageIds);
-        for (Image image : images) {
-            if(image.getPost()==null){
-                image.setPost(post);
-            }
+
+        if (images.size() != imageIds.size()) {
+            throw new IllegalArgumentException("존재하지 않는 이미지가 포함되어 있습니다.");
         }
+
+        //로그인 회원인 경우 post_id가 nul
+        for (Image image : images) {
+            if (canConnectImage(image, loginMemberId, draftToken)) {
+                image.setPost(post);
+                continue;
+            }
+
+            throw new IllegalArgumentException("이미지 매핑 권한이 없습니다.");
+        }
+    }
+
+    private boolean canConnectImage(Image image, Long loginMemberId, String draftToken) {
+        if(image.getPost()!=null){
+            return false;
+        }
+        if(loginMemberId!=null){
+            Member uploaderMember = image.getUploaderMember();
+
+            if(uploaderMember==null){
+                return false;
+            }
+            if(uploaderMember.getId().equals(loginMemberId)){
+                return true;
+            }
+
+            return false;
+        }
+
+        if(draftToken==null){
+            return false;
+        }
+        if(draftToken.isBlank()){
+            return false;
+        }
+        if (image.getDraftToken() == null) {
+            return false;
+        }
+
+        if (image.getDraftToken().equals(draftToken)) {
+            return true;
+        }
+
+        return false;
     }
 
     //유저가 쓴 글들 조회

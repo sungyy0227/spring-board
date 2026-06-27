@@ -16,6 +16,12 @@ public class Image {
     @JoinColumn(name = "post_id")
     private Post post;
 
+    @ManyToOne
+    @JoinColumn(name = "uploader_member_id")
+    private Member uploaderMember;
+
+    private String draftToken;
+
 
     public Long getId() {
         return id;
@@ -47,5 +53,21 @@ public class Image {
 
     public void setPost(Post post) {
         this.post = post;
+    }
+
+    public Member getUploaderMember() {
+        return uploaderMember;
+    }
+
+    public void setUploaderMember(Member uploaderMember) {
+        this.uploaderMember = uploaderMember;
+    }
+
+    public String getDraftToken() {
+        return draftToken;
+    }
+
+    public void setDraftToken(String draftToken) {
+        this.draftToken = draftToken;
     }
 }

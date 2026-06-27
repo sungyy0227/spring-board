@@ -5,9 +5,11 @@ import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import spring.board.domain.Member;
 import spring.board.dto.EditorImageResponse;
 import spring.board.domain.Image;
 import spring.board.repository.ImageRepository;
+import spring.board.repository.MemberRepository;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,10 +23,12 @@ public class ImageService {
     private final Path uploadPath;
     private final Tika tika = new Tika();
     private final ImageRepository imageRepository;
+    private final MemberRepository memberRepository;
 
-    public ImageService(@Value("${file.upload-dir}") String uploadDir, ImageRepository imageRepository){
+    public ImageService(@Value("${file.upload-dir}") String uploadDir, ImageRepository imageRepository, MemberRepository memberRepository){
         this.uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         this.imageRepository = imageRepository;
+        this.memberRepository = memberRepository;
     }
 
     @PostConstruct
@@ -57,12 +61,28 @@ public class ImageService {
     }
 
     //TODO: image에 post_id가 null일때만 매핑이 되게 설정(최소방어임)
-    public EditorImageResponse uploadImage(MultipartFile file) throws IOException {
+    public EditorImageResponse uploadImage(MultipartFile file, Long loginMemberId, String draftToken) throws IOException {
         String imageUrl = store(file);
+
         Image image=new Image();
         image.setUploadedAt(LocalDateTime.now());
         image.setUrl(imageUrl);
         image.setPost(null);
+
+        if(loginMemberId!=null){
+            Member member = memberRepository.findById(loginMemberId).orElseThrow(() ->
+                    new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
+            image.setUploaderMember(member);
+            image.setDraftToken(null);
+        }
+        else{
+            if(draftToken==null || draftToken.isBlank()){
+                throw new IllegalArgumentException("이미지 업로드 식별값이 없습니다.");
+            }
+            image.setUploaderMember(null);
+            image.setDraftToken(draftToken);
+        }
+
         Image savedImage = imageRepository.save(image);
         return new EditorImageResponse(savedImage.getId(), savedImage.getUrl());
     }

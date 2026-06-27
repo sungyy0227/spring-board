@@ -20,6 +20,7 @@ import spring.board.service.ImageService;
 import spring.board.service.MemberService;
 import spring.board.service.PostService;
 import java.io.IOException;
+import java.util.UUID;
 
 
 @Controller
@@ -91,9 +92,20 @@ public class PostController {
                              HttpServletRequest request, Model model, RedirectAttributes redirectAttributes,
                              @AuthenticationPrincipal CustomUserDetails loginMember) {
         Long loginMemberId = loginMember == null ? null : loginMember.getId();
+        String draftToken = null;
+
+        HttpSession session = request.getSession(false);
+        if(session!=null){
+            draftToken = (String) session.getAttribute("postDraftToken");
+        }
 
         try{
-            Long postId=postService.uploadPost(loginMemberId,postDto);
+            Long postId=postService.uploadPost(loginMemberId,postDto, draftToken);
+
+            if(session!=null){
+                session.removeAttribute("postDraftToken");
+            }
+
             return "redirect:/posts/" + postId;
         }
         catch(Exception e){
@@ -105,8 +117,28 @@ public class PostController {
 
     @PostMapping("/editor/images")
     @ResponseBody
-    public EditorImageResponse uploadEditorImage(@RequestParam("imageFile")MultipartFile imageFile) throws IOException {
-        return imageService.uploadImage(imageFile);
+    public EditorImageResponse uploadEditorImage(@RequestParam("imageFile")MultipartFile imageFile,
+                                                 @AuthenticationPrincipal CustomUserDetails loginMember,
+                                                 HttpServletRequest request) throws IOException {
+        Long loginMemberId = loginMember == null ? null : loginMember.getId();
+        String draftToken = null;
+
+        if(loginMemberId==null){
+            HttpSession session = request.getSession();
+            draftToken = getOrCreateDraftToken(session);
+        }
+        return imageService.uploadImage(imageFile, loginMemberId, draftToken);
+    }
+
+    private String getOrCreateDraftToken(HttpSession session) {
+        String draftToken = (String) session.getAttribute("postDraftToken");
+
+        if (draftToken == null) {
+            draftToken = UUID.randomUUID().toString();
+            session.setAttribute("postDraftToken", draftToken);
+        }
+
+        return draftToken;
     }
 
     @GetMapping("/posts/{id}")
@@ -185,7 +217,11 @@ public class PostController {
         Long loginMemberId = loginMember == null ? null : loginMember.getId();
         try{
             postService.validateUpdatePermission(loginMemberId,id,verifiedPostId);
-            postService.modifyPost(id, postDto);
+            String draftToken = null;
+            if (session != null) {
+                draftToken = (String) session.getAttribute("postDraftToken");
+            }
+            postService.modifyPost(id, postDto, loginMemberId, draftToken);
         }
         catch(IllegalArgumentException e){
             model.addAttribute("errorMessage", e.getMessage());
@@ -194,7 +230,13 @@ public class PostController {
             return "postModify";
         }
 
-        if(verifiedPostId!=null) session.removeAttribute("guestEditVerifiedPostId");
+        if (verifiedPostId != null) {
+            session.removeAttribute("guestEditVerifiedPostId");
+        }
+
+        if (session != null) {
+            session.removeAttribute("postDraftToken");
+        }
 
         return "redirect:/posts/"+id;
     }
