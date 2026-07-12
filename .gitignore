@@ -41,6 +41,9 @@ application-*.yml
 application-*.properties
 /LEARNING_LOG.md
 
+# local Codex instructions
+/AGENTS.md
+
 # uploaded images
 /uploads/
 

@@ -29,6 +29,7 @@ import spring.board.security.CustomUserDetails;
 import spring.board.service.CommentService;
 import spring.board.service.MemberService;
 import spring.board.service.PostService;
+import spring.board.service.UserSessionService;
 
 import java.util.List;
 
@@ -38,12 +39,15 @@ public class MemberController {
     private final PostService postService;
     private final CommentService commentService;
     private final MemberService memberService;
+    private final UserSessionService userSessionService;
 
     @Autowired
-    public MemberController(PostService postService, CommentService commentService, MemberService memberService) {
+    public MemberController(PostService postService, CommentService commentService, MemberService memberService,
+                            UserSessionService userSessionService) {
+        this.userSessionService = userSessionService;
         this.postService = postService;
-        this.commentService=commentService;
-        this.memberService=memberService;
+        this.commentService = commentService;
+        this.memberService = memberService;
     }
 
     @GetMapping("/login")
@@ -96,10 +100,7 @@ public class MemberController {
                              HttpServletResponse response,
                              @AuthenticationPrincipal CustomUserDetails loginMember){
         memberService.grantAdmin(id);
-        if (loginMember != null ) {
-            Member refreshedMember = memberService.findById(loginMember.getId());
-            refreshAuthentication(refreshedMember, request, response);
-        }
+        userSessionService.expireUserSessions(id);
         return "redirect:/admin/members/"+id;
     }
 
@@ -108,10 +109,7 @@ public class MemberController {
                               HttpServletResponse response,
                               @AuthenticationPrincipal CustomUserDetails loginMember){
         memberService.removeAdmin(id);
-        if (loginMember != null ) {
-            Member refreshedMember = memberService.findById(loginMember.getId());
-            refreshAuthentication(refreshedMember, request, response);
-        }
+        userSessionService.expireUserSessions(id);
         return "redirect:/admin/members/"+id;
     }
 

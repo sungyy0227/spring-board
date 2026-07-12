@@ -64,26 +64,32 @@
                 const formData = new FormData();
                 formData.append('imageFile', blob, blob.name || 'image.png');
 
-                const response = await fetch('/editor/images', {
-                    method: 'POST',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    },
-                    body: formData
-                });
+                try {
+                    const response = await fetch('/editor/images', {
+                        method: 'POST',
+                        headers: {
+                            [csrfHeader]: csrfToken
+                        },
+                        body: formData
+                    });
 
-                if (!response.ok) {
-                    alert('이미지 업로드에 실패했습니다.');
-                    return;
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        alert(result.message || '이미지 업로드에 실패했습니다.');
+                        return;
+                    }
+
+                    uploadedImageIds.push({
+                        id: result.imageId,
+                        url: result.url
+                    });
+
+                    callback(result.url, blob.name || 'image');
+                } catch (error) {
+                    console.error('이미지 업로드 오류:', error);
+                    alert('이미지 업로드 중 오류가 발생했습니다.');
                 }
-
-                const result = await response.json();
-                uploadedImageIds.push({
-                    id: result.imageId,
-                    url: result.url
-                });
-
-                callback(result.url, blob.name || 'image');
             }
         }
     });

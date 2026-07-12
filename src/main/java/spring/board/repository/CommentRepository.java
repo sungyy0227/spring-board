@@ -1,5 +1,6 @@
 package spring.board.repository;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,5 +20,7 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
     @Query(value = "ALTER TABLE COMMENT ALTER COLUMN ID RESTART WITH 1", nativeQuery = true)
     void resetId();
 
+
+    @EntityGraph(attributePaths = "post")
     List<Comment> findByMemberId(Long memberId);
 }

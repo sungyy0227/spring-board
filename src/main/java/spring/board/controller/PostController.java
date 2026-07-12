@@ -3,6 +3,7 @@ package spring.board.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import spring.board.dto.EditorImageErrorResponse;
 import spring.board.dto.EditorImageResponse;
 import spring.board.domain.Post;
 import spring.board.dto.CommentDto;
@@ -39,10 +41,9 @@ public class PostController {
     }
 
     @RequestMapping("/")
-    public String home(@RequestParam(defaultValue = "1") int page, Model model, HttpServletRequest request, @AuthenticationPrincipal CustomUserDetails loginMember){
+    public String home(@RequestParam(defaultValue = "1") int page, Model model, HttpServletRequest request){
         if(page<1) page=1;
         addHomeModel(page,model,false);
-        addLoginMember(model,loginMember);
 
         return "index";
     }
@@ -89,7 +90,7 @@ public class PostController {
 
     @PostMapping("/posts")
     public String uploadPost(@ModelAttribute("postDto") PostDto postDto,
-                             HttpServletRequest request, Model model, RedirectAttributes redirectAttributes,
+                             HttpServletRequest request,RedirectAttributes redirectAttributes,
                              @AuthenticationPrincipal CustomUserDetails loginMember) {
         Long loginMemberId = loginMember == null ? null : loginMember.getId();
         String draftToken = null;
@@ -117,9 +118,9 @@ public class PostController {
 
     @PostMapping("/editor/images")
     @ResponseBody
-    public EditorImageResponse uploadEditorImage(@RequestParam("imageFile")MultipartFile imageFile,
-                                                 @AuthenticationPrincipal CustomUserDetails loginMember,
-                                                 HttpServletRequest request) throws IOException {
+    public ResponseEntity<?> uploadEditorImage(@RequestParam("imageFile")MultipartFile imageFile,
+                                               @AuthenticationPrincipal CustomUserDetails loginMember,
+                                               HttpServletRequest request) throws IOException {
         Long loginMemberId = loginMember == null ? null : loginMember.getId();
         String draftToken = null;
 
@@ -127,7 +128,20 @@ public class PostController {
             HttpSession session = request.getSession();
             draftToken = getOrCreateDraftToken(session);
         }
-        return imageService.uploadImage(imageFile, loginMemberId, draftToken);
+
+        try{
+            EditorImageResponse response = imageService.uploadImage(imageFile, loginMemberId, draftToken);
+            return ResponseEntity.ok(response);
+        }
+        catch (IllegalArgumentException e){
+            return ResponseEntity.badRequest().body(new EditorImageErrorResponse(e.getMessage()));
+        }
+        catch (IOException e){
+            return ResponseEntity.internalServerError().body(new EditorImageErrorResponse("이미지 파일 저장에 실패했습니다."));
+        }
+        catch (RuntimeException exception) {
+            return ResponseEntity.internalServerError().body(new EditorImageErrorResponse("이미지 업로드 처리에 실패했습니다."));
+        }
     }
 
     private String getOrCreateDraftToken(HttpSession session) {
@@ -173,18 +187,18 @@ public class PostController {
                                         @RequestParam(required = false) String password,
                                         @AuthenticationPrincipal CustomUserDetails loginMember){
         Long loginMemberId = loginMember == null ? null : loginMember.getId();
+        Post post;
         try{
-            postService.validateUpdatePageAccess(loginMemberId, id, password);
+            post=postService.validateUpdatePageAccess(loginMemberId, id, password);
         }catch (IllegalArgumentException e){
+            Post foundPost = postService.getPost(id);
             model.addAttribute("errorMessage", e.getMessage());
-            Post post=postService.getPost(id);
-            model.addAttribute("post", post);
+            model.addAttribute("post", foundPost);
             model.addAttribute("commentDto", new CommentDto());
             model.addAttribute("loginMember", loginMember);
             return "postView";
         }
 
-        Post post=postService.getPost(id);
         if (post.getMember()==null) {
             //비회원이 작성한 글은 수정 페이지 요청시 이미 비밀번호에 대한 검증을 맞췄기 때문에
             //실제 수정 요청시 비밀번호에 대한 검증을 통과했음을 식별 할 수 있는 세션값임
@@ -216,12 +230,11 @@ public class PostController {
 
         Long loginMemberId = loginMember == null ? null : loginMember.getId();
         try{
-            postService.validateUpdatePermission(loginMemberId,id,verifiedPostId);
             String draftToken = null;
             if (session != null) {
                 draftToken = (String) session.getAttribute("postDraftToken");
             }
-            postService.modifyPost(id, postDto, loginMemberId, draftToken);
+            postService.modifyPost(id, postDto, loginMemberId, draftToken,verifiedPostId);
         }
         catch(IllegalArgumentException e){
             model.addAttribute("errorMessage", e.getMessage());
@@ -273,21 +286,20 @@ public class PostController {
 
     @GetMapping("/posts")
     public String searchPost(
-            @RequestParam String type,
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "1") int page, Model model,
-            @AuthenticationPrincipal CustomUserDetails loginMember){
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "1") int page, Model model){
         if(page<1) page=1;
-        Page<Post> postPage = postService.searchPosts(type, keyword, page);
+
         model.addAttribute("keyword", keyword);
         model.addAttribute("type", type);
 
         try{
+            Page<Post> postPage = postService.searchPosts(type, keyword, page);
             addPostList(model,postPage,page,true);
         }
         catch (IllegalArgumentException e){
             addHomeModel(1,model,false);
-            addLoginMember(model,loginMember);
             model.addAttribute("searchErrorMessage", e.getMessage());
             model.addAttribute("searchMode", false);
         }

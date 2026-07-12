@@ -60,14 +60,8 @@ public class ImageService {
         return "/images/post/" + storedFilename;
     }
 
-    //TODO: image에 post_id가 null일때만 매핑이 되게 설정(최소방어임)
     public EditorImageResponse uploadImage(MultipartFile file, Long loginMemberId, String draftToken) throws IOException {
-        String imageUrl = store(file);
-
         Image image=new Image();
-        image.setUploadedAt(LocalDateTime.now());
-        image.setUrl(imageUrl);
-        image.setPost(null);
 
         if(loginMemberId!=null){
             Member member = memberRepository.findById(loginMemberId).orElseThrow(() ->
@@ -83,7 +77,26 @@ public class ImageService {
             image.setDraftToken(draftToken);
         }
 
-        Image savedImage = imageRepository.save(image);
+        String imageUrl = store(file);
+
+        image.setUploadedAt(LocalDateTime.now());
+        image.setUrl(imageUrl);
+        image.setPost(null);
+
+        Image savedImage;
+
+        try {
+            savedImage = imageRepository.saveAndFlush(image);
+        } catch (RuntimeException saveException) {
+            try {
+                deleteByImageUrl(imageUrl);
+            } catch (RuntimeException cleanupException) {
+                saveException.addSuppressed(cleanupException);
+            }
+
+            throw saveException;
+        }
+
         return new EditorImageResponse(savedImage.getId(), savedImage.getUrl());
     }
 

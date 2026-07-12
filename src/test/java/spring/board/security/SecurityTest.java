@@ -5,14 +5,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import spring.board.domain.Member;
 import spring.board.domain.Role;
 import spring.board.domain.Status;
 import spring.board.repository.MemberRepository;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
@@ -33,6 +38,9 @@ public class SecurityTest {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @Autowired
+    SessionRegistry sessionRegistry;
 
     @Test
     @DisplayName("올바른 로그인 정보로 로그인에 성공한다")
@@ -119,4 +127,87 @@ public class SecurityTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin"));
     }
+
+    @Test
+    @DisplayName("ADMIN 권한을 해제하면 대상 회원의 로그인 세션이 만료된다")
+    void removeAdminExpiresTargetUserSessions() throws Exception {
+        Member targetAdmin = saveMember("targetAdmin", "targetAdminNickname", Role.ADMIN);
+        saveMember("actingAdmin", "actingAdminNickname", Role.ADMIN);
+
+        MockHttpSession targetSession = loginAndGetSession("targetAdmin", "123456");
+        MockHttpSession actingAdminSession = loginAndGetSession("actingAdmin", "123456");
+
+        assertSessionIsNotExpired(targetSession);
+
+        mockMvc.perform(post("/admin/members/{id}/remove-admin", targetAdmin.getId())
+                        .session(actingAdminSession)
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/members/" + targetAdmin.getId()));
+
+        Member changedMember = memberRepository.findById(targetAdmin.getId()).orElseThrow();
+        assertThat(changedMember.getRole()).isEqualTo(Role.USER);
+        assertSessionIsExpired(targetSession);
+        assertSessionIsNotExpired(actingAdminSession);
+    }
+
+    @Test
+    @DisplayName("ADMIN 권한을 부여하면 대상 회원의 로그인 세션이 만료된다")
+    void grantAdminExpiresTargetUserSessions() throws Exception {
+        Member targetUser = saveMember("targetUser", "targetUserNickname", Role.USER);
+        saveMember("grantingAdmin", "grantingAdminNickname", Role.ADMIN);
+
+        MockHttpSession targetSession = loginAndGetSession("targetUser", "123456");
+        MockHttpSession actingAdminSession = loginAndGetSession("grantingAdmin", "123456");
+
+        assertSessionIsNotExpired(targetSession);
+
+        mockMvc.perform(post("/admin/members/{id}/grant-admin", targetUser.getId())
+                        .session(actingAdminSession)
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/members/" + targetUser.getId()));
+
+        Member changedMember = memberRepository.findById(targetUser.getId()).orElseThrow();
+        assertThat(changedMember.getRole()).isEqualTo(Role.ADMIN);
+        assertSessionIsExpired(targetSession);
+        assertSessionIsNotExpired(actingAdminSession);
+    }
+
+    private Member saveMember(String loginId, String nickname, Role role) {
+        Member member = new Member();
+        member.setLoginId(loginId);
+        member.setPassword(passwordEncoder.encode("123456"));
+        member.setRole(role);
+        member.setStatus(Status.ACTIVE);
+        member.setNickname(nickname);
+        return memberRepository.saveAndFlush(member);
+    }
+
+    private MockHttpSession loginAndGetSession(String loginId, String password) throws Exception {
+        MvcResult loginResult = mockMvc.perform(post("/login")
+                        .param("loginId", loginId)
+                        .param("password", password)
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(authenticated().withUsername(loginId))
+                .andReturn();
+
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+        assertThat(session).isNotNull();
+        return session;
+    }
+
+    private void assertSessionIsExpired(MockHttpSession session) {
+        SessionInformation sessionInformation = sessionRegistry.getSessionInformation(session.getId());
+        assertThat(sessionInformation).isNotNull();
+        assertThat(sessionInformation.isExpired()).isTrue();
+    }
+
+    private void assertSessionIsNotExpired(MockHttpSession session) {
+        SessionInformation sessionInformation = sessionRegistry.getSessionInformation(session.getId());
+        assertThat(sessionInformation).isNotNull();
+        assertThat(sessionInformation.isExpired()).isFalse();
+    }
+
 }

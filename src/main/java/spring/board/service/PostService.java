@@ -89,7 +89,7 @@ public class PostService {
         int updatedCount = postRepository.increaseViewCount(id);
         if(updatedCount ==0) throw new IllegalArgumentException("게시물이 존재하지 않습니다.");
 
-        return postRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다."));
+        return postRepository.findPostDetailById(id).orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다."));
     }
 
     public Post getPost(long id){
@@ -105,12 +105,14 @@ public class PostService {
         postRepository.deleteAll();
     }
 
-    public void modifyPost(long id, PostDto postdto, Long loginMemberId, String draftToken){
+    public void modifyPost(long id, PostDto postdto, Long loginMemberId, String draftToken, Long verifiedPostId){
         Post post = postRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
         PolicyFactory policy = Sanitizers.FORMATTING
                 .and(Sanitizers.BLOCKS)
                 .and(Sanitizers.LINKS)
                 .and(Sanitizers.IMAGES);
+        //권한 검증용
+        validateUpdatePermission(loginMemberId, verifiedPostId, post);
 
         //수정은 비밀번호 필요 X
         if(post.getMember()==null){ //비회원이 작성했던 글
@@ -257,7 +259,7 @@ public class PostService {
     }
 
     //수정 페이지 요청용 권한 확인
-    public void validateUpdatePageAccess(Long loginMemberId, Long postId, String guestPassword){
+    public Post validateUpdatePageAccess(Long loginMemberId, Long postId, String guestPassword){
         Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
 
         if (post.getMember() != null) { //게시물 작성자가 회원일경우
@@ -270,11 +272,12 @@ public class PostService {
                 throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
             }
         }
+
+        return post;
     }
 
     //수정 요청용 권한 확인
-    public void validateUpdatePermission(Long loginMemberId,Long postId, Long verifiedPostId){
-        Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
+    private void validateUpdatePermission(Long loginMemberId,Long verifiedPostId, Post post){
         //회원일경우
         if(post.getMember()!=null){
             if(loginMemberId == null || !loginMemberId.equals(post.getMember().getId())){
