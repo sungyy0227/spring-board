@@ -47,5 +47,8 @@ application-*.properties
 # uploaded images
 /uploads/
 
+# archived templates
+/src/main/resources/templates/temp/
+
 # logs
 /logs/

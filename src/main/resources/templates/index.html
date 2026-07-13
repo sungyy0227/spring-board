@@ -1,130 +1,153 @@
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
-<link rel="stylesheet" th:href="@{/css/main.css}">
 <head>
-    <title>메인</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Board</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
-<body>
-    <div class="menu">
-        <form th:action="@{/posts/new}" method="get">
-            <button type="submit">글작성</button>
-        </form>
+<body class="board-home">
+<main class="home-shell">
+    <header class="home-header">
+        <a class="brand" th:href="@{/}" aria-label="Spring Board 홈">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span>Spring Board</span>
+        </a>
 
-        <div class="right-menu">
-
-            <div th:if="${loginMember == null}">
-                <form th:action="@{/login}" method="get">
-                    <button>로그인</button>
-                </form>
+        <nav class="user-menu" aria-label="사용자 메뉴">
+            <div class="guest-menu" th:if="${loginMember == null}">
+                <a class="button button-secondary" th:href="@{/login}">로그인</a>
+                <a class="button button-primary" th:href="@{/posts/new}">글쓰기</a>
             </div>
 
-            <div th:if="${loginMember != null}">
-                <span th:text="${loginMember.nickname} + ' 님'"></span>
-
-                <div th:if="${loginMember.isAdmin()}">
-                    <form th:action="@{/admin}"><button>관리자페이지</button></form>
-                </div>
-                <form th:action="@{/mypage}" method="get">
-                    <button>마이페이지</button>
-                </form>
-                <form th:action="@{/logout}" method="post">
-                    <button>로그아웃</button>
+            <div class="member-menu" th:if="${loginMember != null}">
+                <span class="user-name" th:text="|${loginMember.nickname} 님|">사용자 님</span>
+                <a class="button button-secondary"
+                   th:if="${loginMember.isAdmin()}"
+                   th:href="@{/admin}">관리자</a>
+                <a class="button button-secondary" th:href="@{/mypage}">마이페이지</a>
+                <form class="inline-form" th:action="@{/logout}" method="post">
                     <input type="hidden"
                            th:name="${_csrf.parameterName}"
                            th:value="${_csrf.token}">
+                    <button class="button button-secondary" type="submit">로그아웃</button>
                 </form>
+                <a class="button button-primary" th:href="@{/posts/new}">글쓰기</a>
+            </div>
+        </nav>
+    </header>
+
+    <section class="home-hero" aria-labelledby="home-title">
+        <div>
+            <h1 id="home-title">함께 나누는 이야기</h1>
+            <p>회원과 비회원 모두 자유롭게 참여할 수 있는 게시판입니다.</p>
+        </div>
+        <span class="post-count" th:text="|전체 게시글 ${postPage.totalElements}개|">전체 게시글 0개</span>
+    </section>
+
+    <section class="board-section" aria-labelledby="board-title">
+        <div class="section-heading">
+            <div>
+                <h2 id="board-title">게시글</h2>
+                <p th:if="${searchMode}" th:text="|'${keyword}' 검색 결과|">검색 결과</p>
+                <p th:unless="${searchMode}">새로운 이야기를 확인해 보세요.</p>
             </div>
 
+            <form class="search-form" th:action="@{/posts}" method="get">
+                <label class="sr-only" for="search-type">검색 범위</label>
+                <select id="search-type" name="type">
+                    <option value="title_content" th:selected="${type == 'title_content'}">제목+내용</option>
+                    <option value="title" th:selected="${type == 'title'}">제목</option>
+                    <option value="content" th:selected="${type == 'content'}">내용</option>
+                    <option value="poster" th:selected="${type == 'poster'}">작성자</option>
+                </select>
+
+                <label class="sr-only" for="search-keyword">검색어</label>
+                <input id="search-keyword"
+                       type="search"
+                       name="keyword"
+                       th:value="${keyword}"
+                       placeholder="두 글자 이상 입력하세요">
+                <button class="button button-primary" type="submit">검색</button>
+            </form>
         </div>
-    </div>
-    <table>
-        <colgroup>
-            <col style="width: 10%;">
-            <col style="width: 50%;">
-            <col style="width: 15%;">
-            <col style="width: 15%;">
-            <col style="width: 10%;">
-        </colgroup>
-        <thead>
-            <tr>
-                <th scope="col">번호</th>
-                <th scope="col">제목</th>
-                <th scope="col">작성자</th>
-                <th scope="col">날짜</th>
-                <th scope="col">조회수</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:if="${searchMode and postPage.empty}">
-                <td colspan="5">검색 결과가 없습니다.</td>
-            </tr>
-            <tr th:each="post : ${posts}">
-                <td th:text="${post.id}"></td>
-                <td>
-                    <a th:href="@{/posts/{id}(id=${post.id})}"
-                       th:text="${post.title}">제목</a>
-                </td>
-                <td th:text="${post.poster}"></td>
-                <td th:text="${#temporals.format(post.createdAt, 'MM-dd HH:mm')}"></td>
-                <td th:text="${post.viewCount}"></td>
-            </tr>
-            <tr>
-                <td colspan="5"><div class="pagination" th:if="${postPage.totalPages > 0}">
 
-                    <!-- 왼쪽 화살표 -->
-                    <a class="pageButton"
-                       th:if="${startPage > 1}"
-                       th:href="${searchMode}
-                           ? @{/posts(type=${type}, keyword=${keyword}, page=${startPage - 1})}
-                           : @{/(page=${startPage - 1})}">
-                        <button type="button">&lt;</button>
-                    </a>
+        <p class="search-error"
+           th:if="${searchErrorMessage != null}"
+           th:text="${searchErrorMessage}">검색 오류</p>
 
-                    <!-- 페이지 번호 -->
-                    <a class="pageButton"
-                       th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
-                       th:href="${searchMode}
-                           ? @{/posts(type=${type}, keyword=${keyword}, page=${pageNum})}
-                           : @{/(page=${pageNum})}">
-                        <button type="button"
-                                th:text="${pageNum}">
-                        </button>
-                    </a>
+        <div class="post-list">
+            <table class="post-table">
+                <thead>
+                <tr>
+                    <th class="number-column" scope="col">번호</th>
+                    <th scope="col">제목</th>
+                    <th class="author-column" scope="col">작성자</th>
+                    <th class="date-column" scope="col">날짜</th>
+                    <th class="view-column" scope="col">조회수</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="empty-row" th:if="${postPage.empty}">
+                    <td colspan="5"
+                        th:text="${searchMode} ? '검색 결과가 없습니다.' : '아직 등록된 게시글이 없습니다.'">
+                        게시글이 없습니다.
+                    </td>
+                </tr>
+                <tr th:each="post : ${posts}">
+                    <td class="number-column" th:text="${post.id}">1</td>
+                    <td class="title-column">
+                        <a th:href="@{/posts/{id}(id=${post.id})}"
+                           th:text="${post.title}">게시글 제목</a>
+                    </td>
+                    <td class="author-column" th:text="${post.poster}">작성자</td>
+                    <td class="date-column"
+                        th:text="${#temporals.format(post.createdAt, 'MM-dd HH:mm')}">01-01 12:00</td>
+                    <td class="view-column" th:text="${post.viewCount}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
-                    <!-- 오른쪽 화살표 -->
-                    <a class="pageButton"
-                       th:if="${endPage < postPage.totalPages}"
-                       th:href="${searchMode}
-                           ? @{/posts(type=${type}, keyword=${keyword}, page=${endPage + 1})}
-                           : @{/(page=${endPage + 1})}">
-                        <button type="button">&gt;</button>
-                    </a>
+        <div class="board-actions">
+            <nav class="home-pagination"
+                 th:if="${postPage.totalPages > 0}"
+                 aria-label="게시글 페이지 이동">
+                <a class="page-link page-direction"
+                   th:if="${startPage > 1}"
+                   th:href="${searchMode}
+                       ? @{/posts(type=${type}, keyword=${keyword}, page=${startPage - 1})}
+                       : @{/(page=${startPage - 1})}">이전</a>
 
-                </div></td>
-            </tr>
-            <tr>
-                <td colspan="5">
-                    <form th:action="@{/posts}" method="get">
-                        <select name="type">
-                            <option value="title_content" th:selected="${type == 'title_content'}">제목+내용</option>
-                            <option value="title" th:selected="${type == 'title'}">제목</option>
-                            <option value="content" th:selected="${type == 'content'}">내용</option>
-                            <option value="poster" th:selected="${type == 'poster'}">작성자</option>
-                        </select>
+                <a class="page-link"
+                   th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
+                   th:classappend="${pageNum == currentPage} ? ' is-active' : ''"
+                   th:attr="aria-current=${pageNum == currentPage ? 'page' : null}"
+                   th:href="${searchMode}
+                       ? @{/posts(type=${type}, keyword=${keyword}, page=${pageNum})}
+                       : @{/(page=${pageNum})}"
+                   th:text="${pageNum}">1</a>
 
-                        <input type="text" name="keyword" th:value="${keyword}" placeholder="검색어 입력">
+                <a class="page-link page-direction"
+                   th:if="${endPage < postPage.totalPages}"
+                   th:href="${searchMode}
+                       ? @{/posts(type=${type}, keyword=${keyword}, page=${endPage + 1})}
+                       : @{/(page=${endPage + 1})}">다음</a>
+            </nav>
 
-                        <button type="submit">검색</button>
-                    </form>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="5">
-                    <div th:if="${searchErrorMessage != null}">
-                        <h3 th:text="${searchErrorMessage}"></h3>
-                    </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+            <a class="button button-primary board-write-button" th:href="@{/posts/new}">글쓰기</a>
+        </div>
+    </section>
+
+    <footer class="home-footer">
+        <span>Spring Board Project</span>
+        <div class="tech-stack" aria-label="사용 기술">
+            <span>Spring Boot</span>
+            <span>Spring Security</span>
+            <span>JPA</span>
+            <span>Thymeleaf</span>
+        </div>
+    </footer>
+</main>
 </body>
 </html>

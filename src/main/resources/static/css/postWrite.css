@@ -1,2 +1,242 @@
-table { width: 500px; }
-textarea { width: 100%; height: 180px; box-sizing: border-box; }
+:root {
+    --write-background: #f4f7fb;
+    --write-surface: #ffffff;
+    --write-text: #182230;
+    --write-muted: #667085;
+    --write-border: #e4e7ec;
+    --write-primary: #3157d5;
+    --write-primary-dark: #2446ba;
+    --write-primary-soft: #eef2ff;
+    --write-danger: #b42318;
+    --write-danger-soft: #fef3f2;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.write-page {
+    margin: 0;
+    min-width: 320px;
+    background: var(--write-background);
+    color: var(--write-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.write-shell {
+    width: min(100% - 40px, 1120px);
+    margin: 0 auto;
+    padding: 24px 0 56px;
+}
+
+.write-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 8px 0 24px;
+    border-bottom: 1px solid var(--write-border);
+}
+
+.write-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--write-text);
+    font-size: 19px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.write-brand-mark {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--write-primary);
+    box-shadow: 0 0 0 5px var(--write-primary-soft);
+}
+
+.write-card {
+    margin-top: 42px;
+    padding: 32px;
+    border: 1px solid var(--write-border);
+    border-radius: 16px;
+    background: var(--write-surface);
+    box-shadow: 0 14px 40px rgba(24, 34, 48, 0.07);
+}
+
+.write-heading {
+    margin-bottom: 28px;
+}
+
+.write-eyebrow {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--write-primary);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+}
+
+.write-heading h1 {
+    margin: 0 0 10px;
+    font-size: 30px;
+    letter-spacing: -0.03em;
+}
+
+.write-heading p {
+    margin: 0;
+    color: var(--write-muted);
+    font-size: 14px;
+}
+
+.write-form {
+    display: grid;
+    gap: 18px;
+}
+
+.write-field,
+.editor-field {
+    display: grid;
+    gap: 8px;
+    color: var(--write-text);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.write-field input {
+    width: 100%;
+    min-height: 46px;
+    padding: 11px 13px;
+    border: 1px solid var(--write-border);
+    border-radius: 9px;
+    background: var(--write-surface);
+    color: var(--write-text);
+    font: inherit;
+    font-weight: 400;
+}
+
+.write-field input::placeholder {
+    color: #98a2b3;
+}
+
+.write-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.write-meta > :only-child {
+    grid-column: 1 / -1;
+}
+
+.member-writer {
+    display: flex;
+    min-height: 46px;
+    align-items: center;
+    padding: 11px 13px;
+    border: 1px solid var(--write-border);
+    border-radius: 9px;
+    background: #f9fafb;
+    color: var(--write-muted);
+    font-weight: 500;
+}
+
+.editor-field .toastui-editor-defaultUI {
+    overflow: hidden;
+    border-color: var(--write-border);
+    border-radius: 9px;
+}
+
+.field-error,
+.write-error {
+    margin: -10px 0 0;
+    color: var(--write-danger);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.write-error {
+    padding: 11px 13px;
+    border-radius: 9px;
+    background: var(--write-danger-soft);
+}
+
+.write-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 6px;
+}
+
+.primary-button,
+.secondary-button {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.primary-button {
+    border-color: var(--write-primary);
+    background: var(--write-primary);
+    color: #ffffff;
+}
+
+.primary-button:hover {
+    border-color: var(--write-primary-dark);
+    background: var(--write-primary-dark);
+}
+
+.secondary-button {
+    border-color: var(--write-border);
+    background: var(--write-surface);
+    color: var(--write-text);
+}
+
+.secondary-button:hover {
+    border-color: #c8ced8;
+    background: #f9fafb;
+}
+
+.write-field input:focus-visible,
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.write-brand:focus-visible {
+    outline: 3px solid rgba(49, 87, 213, 0.25);
+    outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+    .write-shell {
+        width: min(100% - 24px, 1120px);
+        padding-top: 14px;
+    }
+
+    .write-card {
+        margin-top: 28px;
+        padding: 22px 16px;
+        border-radius: 12px;
+    }
+
+    .write-meta {
+        grid-template-columns: 1fr;
+    }
+
+    .write-actions {
+        flex-direction: column-reverse;
+    }
+
+    .write-actions .primary-button,
+    .write-actions .secondary-button {
+        width: 100%;
+    }
+}
