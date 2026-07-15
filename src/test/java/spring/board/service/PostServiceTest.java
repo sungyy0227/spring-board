@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.board.domain.Member;
 import spring.board.domain.Post;
 import spring.board.domain.Role;
-import spring.board.domain.Status;;
+import spring.board.domain.Status;
 import spring.board.dto.PostDto;
 import spring.board.repository.MemberRepository;
 import spring.board.repository.PostRepository;

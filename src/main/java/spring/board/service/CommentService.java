@@ -1,7 +1,6 @@
 package spring.board.service;
 
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -30,9 +29,9 @@ public class CommentService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public Long addComment(Long id, CommentDto commentDto,Long loginMemberId) {
+    public Long addComment(Long postId, CommentDto commentDto, Long loginMemberId) {
 
-        Post post = postRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new IllegalArgumentException("해당 게시물이 존재하지 않습니다."));
         Comment comment = new Comment();
         if(!StringUtils.hasText(commentDto.getCommentContent())){
             throw new IllegalArgumentException("내용은 필수입니다.");
