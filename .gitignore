@@ -39,6 +39,7 @@ out/
 # application config (sensitive)
 application-*.yml
 application-*.properties
+!src/main/resources/application-prod.properties
 /LEARNING_LOG.md
 
 # local Codex instructions
