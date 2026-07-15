@@ -417,6 +417,11 @@
     color: var(--account-danger);
 }
 
+.account-alert-success {
+    background: #ecfdf3;
+    color: #027a48;
+}
+
 .danger-card {
     border-color: #fecdca;
 }
@@ -446,6 +451,26 @@
 .danger-action-item p,
 .account-footer-card p {
     font-size: 13px;
+}
+
+.data-reset-form {
+    display: grid;
+    grid-template-columns: minmax(170px, 1fr) auto;
+    gap: 8px;
+    min-width: min(100%, 390px);
+}
+
+.data-reset-form input {
+    min-height: 42px;
+    padding: 0 12px;
+    border: 1px solid #fda29b;
+    border-radius: 9px;
+    color: var(--account-text);
+    background: #fff;
+}
+
+.dev-reset-card {
+    border-style: dashed;
 }
 
 .account-footer-card {
@@ -612,6 +637,11 @@
     .danger-action-item button,
     .danger-text-link {
         width: 100%;
+    }
+
+    .data-reset-form {
+        grid-template-columns: 1fr;
+        min-width: 100%;
     }
 
     .danger-text-link {

@@ -20,7 +20,7 @@ public class SecurityConfig {
                 .csrf(csrf -> {
                 })
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/admin", "/admin/**", "/clearAll","/clearPost").hasRole("ADMIN")
+                        .requestMatchers("/admin", "/admin/**", "/dev/**").hasRole("ADMIN")
                         .requestMatchers("/mypage", "/mypage/**").authenticated()
                         .anyRequest().permitAll()
                 )

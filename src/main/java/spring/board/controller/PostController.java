@@ -19,7 +19,6 @@ import spring.board.dto.PostDto;
 import spring.board.security.CustomUserDetails;
 import spring.board.service.CommentService;
 import spring.board.service.ImageService;
-import spring.board.service.MemberService;
 import spring.board.service.PostService;
 import java.io.IOException;
 import java.util.UUID;
@@ -29,14 +28,12 @@ import java.util.UUID;
 public class PostController {
     private final PostService postService;
     private final CommentService commentService;
-    private final MemberService memberService;
     private final ImageService imageService;
 
     @Autowired
-    public PostController(PostService postService, CommentService commentService, MemberService memberService, ImageService imageService) {
+    public PostController(PostService postService, CommentService commentService, ImageService imageService) {
         this.postService = postService;
         this.commentService=commentService;
-        this.memberService = memberService;
         this.imageService = imageService;
     }
 
@@ -73,19 +70,6 @@ public class PostController {
             model.addAttribute("postDto",new PostDto());
         }
         return "postWrite";
-    }
-
-    @PostMapping("/clearPost")
-    public String delAllPost(){ //TODO: 개선 or 삭제
-        postService.deleteAllAndResetId();
-        return "redirect:/";
-    }
-
-    @PostMapping("/clearAll")
-    public String delAllPostAndMember(){ //TODO: 개선 or 삭제
-        postService.deleteAllAndResetId();
-        memberService.resetAllMember();
-        return "redirect:/";
     }
 
     @PostMapping("/posts")

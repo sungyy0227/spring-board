@@ -129,6 +129,29 @@ public class SecurityTest {
     }
 
     @Test
+    @DisplayName("일반 유저는 게시판 데이터 리셋을 실행할 수 없다")
+    void userCannotResetBoardData() throws Exception {
+        mockMvc.perform(post("/admin/reset/board")
+                        .with(user("user").roles("USER"))
+                        .with(csrf())
+                        .param("confirmation", "RESET BOARD"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"));
+    }
+
+    @Test
+    @DisplayName("관리자도 확인 문구가 다르면 게시판 데이터를 리셋할 수 없다")
+    void adminCannotResetBoardDataWithWrongConfirmation() throws Exception {
+        mockMvc.perform(post("/admin/reset/board")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf())
+                        .param("confirmation", "WRONG"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin"))
+                .andExpect(flash().attribute("resetErrorMessage", "확인 문구가 일치하지 않습니다."));
+    }
+
+    @Test
     @DisplayName("ADMIN 권한을 해제하면 대상 회원의 로그인 세션이 만료된다")
     void removeAdminExpiresTargetUserSessions() throws Exception {
         Member targetAdmin = saveMember("targetAdmin", "targetAdminNickname", Role.ADMIN);

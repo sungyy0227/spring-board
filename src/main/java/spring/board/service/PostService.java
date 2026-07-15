@@ -1,6 +1,8 @@
 package spring.board.service;
 
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.owasp.html.PolicyFactory;
 import org.owasp.html.Sanitizers;
 import org.springframework.data.domain.Page;
@@ -9,6 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 import spring.board.dto.PostDto;
 import spring.board.domain.Image;
@@ -26,6 +30,8 @@ import java.util.List;
 @Service
 @Transactional
 public class PostService {
+    private static final Logger log = LoggerFactory.getLogger(PostService.class);
+
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final PasswordEncoder passwordEncoder;
@@ -168,6 +174,49 @@ public class PostService {
         postRepository.resetId();
     }
 
+    public ResetResult resetBoardData() {
+        List<String> imageUrls = imageRepository.findAll().stream()
+                .map(Image::getUrl)
+                .toList();
+
+        long imageCount = imageUrls.size();
+        long commentCount = commentRepository.count();
+        long postCount = postRepository.count();
+
+        imageRepository.deleteAllInBatch();
+        commentRepository.deleteAllInBatch();
+        postRepository.deleteAllInBatch();
+
+        deleteImageFilesAfterCommit(imageUrls);
+
+        return new ResetResult(imageCount, commentCount, postCount);
+    }
+
+    private void deleteImageFilesAfterCommit(List<String> imageUrls) {
+        Runnable fileCleanup = () -> imageUrls.forEach(imageUrl -> {
+            try {
+                imageService.deleteByImageUrl(imageUrl);
+            } catch (RuntimeException exception) {
+                log.error("게시판 초기화 후 이미지 파일 삭제에 실패했습니다. imageUrl={}", imageUrl, exception);
+            }
+        });
+
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            fileCleanup.run();
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                fileCleanup.run();
+            }
+        });
+    }
+
+    public record ResetResult(long imageCount, long commentCount, long postCount) {
+    }
+
     public Long uploadPost(Long loginMemberId, PostDto postDto, String draftToken) throws IOException {
 
         Post post = new Post();
@@ -208,7 +257,7 @@ public class PostService {
             throw new IllegalArgumentException("존재하지 않는 이미지가 포함되어 있습니다.");
         }
 
-        //로그인 회원인 경우 post_id가 nul
+        //로그인 회원인 경우 post_id가 null
         for (Image image : images) {
             if (canConnectImage(image, loginMemberId, draftToken)) {
                 image.setPost(post);
