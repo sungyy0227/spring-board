@@ -20,7 +20,7 @@ WORKDIR /app
 
 RUN groupadd --system spring && \
     useradd --system --gid spring --home-dir /app --no-create-home spring && \
-    mkdir -p /app/uploads/post-images && \
+    mkdir -p /app/uploads/post-images /app/logs && \
     chown -R spring:spring /app
 
 COPY --from=builder --chown=spring:spring /workspace/app.jar /app/app.jar

@@ -42,7 +42,9 @@ services:
       - "127.0.0.1:8080:8080"
     volumes:
       - upload-data:/app/uploads/post-images
+      - app-logs:/app/logs
 
 volumes:
   mysql-data:
   upload-data:
+  app-logs:
