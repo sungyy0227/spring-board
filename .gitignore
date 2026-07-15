@@ -40,6 +40,11 @@ out/
 application-*.yml
 application-*.properties
 !src/main/resources/application-prod.properties
+
+# environment secrets
+.env
+.env.*
+!.env.example
 /LEARNING_LOG.md
 
 # local Codex instructions

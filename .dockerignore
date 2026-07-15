@@ -1,0 +1,52 @@
+# Git and local workspace metadata
+.git
+.gitattributes
+.gitignore
+.agents
+.codex
+
+# IDE settings
+.idea
+.vscode
+.settings
+.classpath
+.project
+.factorypath
+.springBeans
+.sts4-cache
+*.iml
+*.ipr
+*.iws
+
+# Gradle and compiled output
+.gradle
+build
+**/build
+out
+bin
+gradlew.bat
+
+# Tests are verified before building the production image
+src/test
+
+# Local runtime data
+uploads
+logs
+work
+*.log
+
+# Local secrets and Compose-only configuration
+.env
+.env.*
+compose*.yml
+compose*.yaml
+
+# Local documentation and instructions
+docs
+AGENTS.md
+HELP.md
+LEARNING_LOG.md
+README.md
+
+# Archived templates are not part of the running application
+src/main/resources/templates/temp
