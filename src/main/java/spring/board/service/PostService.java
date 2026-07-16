@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
+import spring.board.dto.EditorImageResponse;
 import spring.board.dto.PostDto;
 import spring.board.domain.Image;
 import spring.board.domain.Member;
@@ -117,30 +118,35 @@ public class PostService {
                 .and(Sanitizers.BLOCKS)
                 .and(Sanitizers.LINKS)
                 .and(Sanitizers.IMAGES);
+        String sanitizedContent = sanitizeContent(policy, postdto.getContent());
         //권한 검증용
         validateUpdatePermission(loginMemberId, verifiedPostId, post);
+        boolean hasExistingImage = hasReferencedPostImage(post.getId(), sanitizedContent);
 
         //수정은 비밀번호 필요 X
         if(post.getMember()==null){ //비회원이 작성했던 글
-            validatePostDto(postdto,true,false);
+            validatePostDto(postdto, sanitizedContent, hasExistingImage, true, false);
             post.setPoster(postdto.getPoster());
         }
         else{ //회원이 작성했던 글
-            validatePostDto(postdto,false,false);
+            validatePostDto(postdto, sanitizedContent, hasExistingImage, false, false);
         }
 
-        connectImagesToPost(postdto.getImageIds(), post, loginMemberId, draftToken);
+        int connectedImageCount = connectImagesToPost(
+                postdto.getImageIds(), post, loginMemberId, draftToken, sanitizedContent);
+        validateFinalContent(sanitizedContent, hasExistingImage || connectedImageCount > 0);
         post.setTitle(postdto.getTitle());
-        post.setContent(policy.sanitize(postdto.getContent()));
+        post.setContent(sanitizedContent);
     }
 
-    //postDto 입력 값 검증 메소드, 파라미터는 (postDto, 작성자 값 검사 여부, 비밀번호 검사 여부)
-    private void validatePostDto(PostDto postDto, boolean requirePoster, boolean requireGuestPassword){
+    // postDto 입력값과 정제된 본문, 기존 이미지 존재 여부를 함께 검증
+    private void validatePostDto(PostDto postDto, String sanitizedContent, boolean hasExistingImage,
+                                 boolean requirePoster, boolean requireGuestPassword){
         if (!StringUtils.hasText(postDto.getTitle())) {
             throw new IllegalArgumentException("제목은 필수입니다.");
         }
-        if (!hasTextContent(postDto.getContent())) {
-            throw new IllegalArgumentException("내용은 필수입니다.");
+        if (!hasTextContent(sanitizedContent) && !hasUploadedImage(postDto) && !hasExistingImage) {
+            throw new IllegalArgumentException("내용 또는 이미지는 필수입니다.");
         }
         if (requirePoster && !StringUtils.hasText(postDto.getPoster())) {
             throw new IllegalArgumentException("작성자는 필수입니다.");
@@ -148,6 +154,11 @@ public class PostService {
         if (requireGuestPassword && !StringUtils.hasText(postDto.getGuestPassword())) {
             throw new IllegalArgumentException("비밀번호는 필수입니다.");
         }
+    }
+
+    private boolean hasUploadedImage(PostDto postDto) {
+        return postDto.getImageIds() != null
+                && !postDto.getImageIds().isEmpty();
     }
 
     private boolean hasTextContent(String content) {
@@ -163,6 +174,25 @@ public class PostService {
                 .trim();
 
         return StringUtils.hasText(text);
+    }
+
+    private String sanitizeContent(PolicyFactory policy, String content) {
+        return policy.sanitize(content == null ? "" : content);
+    }
+
+    private void validateFinalContent(String content, boolean hasReferencedImage) {
+        if (!hasTextContent(content) && !hasReferencedImage) {
+            throw new IllegalArgumentException("내용 또는 이미지는 필수입니다.");
+        }
+    }
+
+    private boolean hasReferencedPostImage(Long postId, String content) {
+        if (!StringUtils.hasText(content)) {
+            return false;
+        }
+
+        return imageRepository.findByPostId(postId).stream()
+                .anyMatch(image -> content.contains(image.getUrl()));
     }
 
 
@@ -224,31 +254,35 @@ public class PostService {
                 .and(Sanitizers.BLOCKS)
                 .and(Sanitizers.LINKS)
                 .and(Sanitizers.IMAGES);
+        String sanitizedContent = sanitizeContent(policy, postDto.getContent());
 
         if (loginMemberId !=null){ //작성자가 회원일때
             Member member = memberRepository.findById(loginMemberId).orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
-            validatePostDto(postDto, false, false);
+            validatePostDto(postDto, sanitizedContent, false, false, false);
             post.setPoster(member.getNickname());
             post.setMember(member);
         }
         else{ //작성자가 비회원일때
-            validatePostDto(postDto,true,true);
+            validatePostDto(postDto, sanitizedContent, false, true, true);
             post.setPoster(postDto.getPoster());
             post.setGuestPassword(passwordEncoder.encode(postDto.getGuestPassword()));
         }
 
         post.setTitle(postDto.getTitle());
-        post.setContent(policy.sanitize(postDto.getContent()));
+        post.setContent(sanitizedContent);
         post.setCreatedAt(LocalDateTime.now());
         postRepository.save(post);
-        connectImagesToPost(postDto.getImageIds(), post, loginMemberId,draftToken);
+        int connectedImageCount = connectImagesToPost(
+                postDto.getImageIds(), post, loginMemberId, draftToken, sanitizedContent);
+        validateFinalContent(sanitizedContent, connectedImageCount > 0);
 
         return post.getId();
     }
 
-    private void connectImagesToPost(List<Long> imageIds, Post post,Long loginMemberId ,String draftToken) {
+    private int connectImagesToPost(List<Long> imageIds, Post post, Long loginMemberId,
+                                    String draftToken, String content) {
         if (imageIds == null || imageIds.isEmpty()) {
-            return;
+            return 0;
         }
 
         List<Image> images = imageRepository.findAllById(imageIds);
@@ -257,15 +291,33 @@ public class PostService {
             throw new IllegalArgumentException("존재하지 않는 이미지가 포함되어 있습니다.");
         }
 
-        //로그인 회원인 경우 post_id가 null
+        int connectedImageCount = 0;
+
         for (Image image : images) {
             if (canConnectImage(image, loginMemberId, draftToken)) {
-                image.setPost(post);
+                if (content.contains(image.getUrl())) {
+                    image.setPost(post);
+                    connectedImageCount++;
+                }
                 continue;
             }
 
             throw new IllegalArgumentException("이미지 매핑 권한이 없습니다.");
         }
+
+        return connectedImageCount;
+    }
+
+    public List<EditorImageResponse> getPendingEditorImages(List<Long> imageIds, Long loginMemberId,
+                                                             String draftToken) {
+        if (imageIds == null || imageIds.isEmpty()) {
+            return List.of();
+        }
+
+        return imageRepository.findAllById(imageIds).stream()
+                .filter(image -> canConnectImage(image, loginMemberId, draftToken))
+                .map(image -> new EditorImageResponse(image.getId(), image.getUrl()))
+                .toList();
     }
 
     private boolean canConnectImage(Image image, Long loginMemberId, String draftToken) {

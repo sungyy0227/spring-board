@@ -9,15 +9,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
+import spring.board.domain.Image;
 import spring.board.domain.Member;
 import spring.board.domain.Post;
 import spring.board.domain.Role;
 import spring.board.domain.Status;
+import spring.board.dto.EditorImageResponse;
 import spring.board.dto.PostDto;
+import spring.board.repository.ImageRepository;
 import spring.board.repository.MemberRepository;
 import spring.board.repository.PostRepository;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +40,9 @@ class PostServiceTest {
 
     @Autowired
     MemberRepository memberRepository;
+
+    @Autowired
+    ImageRepository imageRepository;
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -95,11 +103,60 @@ class PostServiceTest {
         assertThat(post.getContent()).contains("content");
     }
 
+    @Test
+    @DisplayName("텍스트 없이 이미지만 있는 회원 글 작성에 성공한다")
+    void imageOnlyPostUploadSucceeds() throws IOException {
+        Member member = saveMember("imageOwner", "image owner");
+        Image image = savePendingMemberImage(member, "/images/post/image-only.png");
+        PostDto postDto = new PostDto();
+        postDto.setTitle("image only");
+        postDto.setContent("<p><img src=\"/images/post/image-only.png\"></p>");
+        postDto.setImageIds(List.of(image.getId()));
+
+        Long postId = postService.uploadPost(member.getId(), postDto, null);
+
+        Image connectedImage = imageRepository.findById(image.getId()).orElseThrow();
+        assertThat(connectedImage.getPost().getId()).isEqualTo(postId);
+    }
+
+    @Test
+    @DisplayName("본문에서 제거한 이미지는 게시글에 연결하지 않는다")
+    void removedImageIsNotConnectedToPost() throws IOException {
+        Member member = saveMember("removedImageOwner", "removed image owner");
+        Image image = savePendingMemberImage(member, "/images/post/removed.png");
+        PostDto postDto = new PostDto();
+        postDto.setTitle("text post");
+        postDto.setContent("<p>이미지는 제거하고 텍스트만 남겼습니다.</p>");
+        postDto.setImageIds(List.of(image.getId()));
+
+        postService.uploadPost(member.getId(), postDto, null);
+
+        Image pendingImage = imageRepository.findById(image.getId()).orElseThrow();
+        assertThat(pendingImage.getPost()).isNull();
+    }
+
+    @Test
+    @DisplayName("검증 실패 후에는 현재 사용자의 미연결 이미지만 복원한다")
+    void pendingEditorImagesAreRestoredForOwnerOnly() {
+        Member owner = saveMember("restoreOwner", "restore owner");
+        Member other = saveMember("restoreOther", "restore other");
+        Image ownerImage = savePendingMemberImage(owner, "/images/post/owner.png");
+        Image otherImage = savePendingMemberImage(other, "/images/post/other.png");
+
+        List<EditorImageResponse> restoredImages = postService.getPendingEditorImages(
+                List.of(ownerImage.getId(), otherImage.getId()), owner.getId(), null);
+
+        assertThat(restoredImages)
+                .extracting(EditorImageResponse::getImageId)
+                .containsExactly(ownerImage.getId());
+        assertThat(restoredImages.get(0).getUrl()).isEqualTo(ownerImage.getUrl());
+    }
+
     private static Stream<Arguments> invalidGuestPostDtos() {
         return Stream.of(
                 Arguments.of(guestPostDto(null, "content", "guest", "123456"), "제목은 필수입니다."),
-                Arguments.of(guestPostDto("title", null, "guest", "123456"), "내용은 필수입니다."),
-                Arguments.of(guestPostDto("title", "<p><br></p>", "guest", "123456"), "내용은 필수입니다."),
+                Arguments.of(guestPostDto("title", null, "guest", "123456"), "내용 또는 이미지는 필수입니다."),
+                Arguments.of(guestPostDto("title", "<p><br></p>", "guest", "123456"), "내용 또는 이미지는 필수입니다."),
                 Arguments.of(guestPostDto("title", "content", null, "123456"), "작성자는 필수입니다."),
                 Arguments.of(guestPostDto("title", "content", "guest", null), "비밀번호는 필수입니다.")
         );
@@ -215,6 +272,14 @@ class PostServiceTest {
         member.setRole(Role.USER);
         member.setStatus(Status.ACTIVE);
         return memberRepository.save(member);
+    }
+
+    private Image savePendingMemberImage(Member member, String url) {
+        Image image = new Image();
+        image.setUploadedAt(LocalDateTime.now());
+        image.setUrl(url);
+        image.setUploaderMember(member);
+        return imageRepository.save(image);
     }
 
 }

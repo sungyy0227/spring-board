@@ -93,12 +93,18 @@
 </main>
 
 <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
-<script>
+<script th:inline="javascript">
     const contentField = document.querySelector('#content');
     const postForm = document.querySelector('#post-form');
     const csrfToken = document.querySelector('meta[name="_csrf"]').content;
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
-    const uploadedImageIds = [];
+    const restoredImages = /*[[${uploadedImages}]]*/ null;
+    const uploadedImageIds = Array.isArray(restoredImages)
+        ? restoredImages.map(image => ({
+            id: image.imageId,
+            url: image.url
+        }))
+        : [];
 
     const editor = new toastui.Editor({
         el: document.querySelector('#editor'),

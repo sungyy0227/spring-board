@@ -96,6 +96,10 @@ public class PostController {
         catch(Exception e){
             redirectAttributes.addFlashAttribute("postErrorMessage", e.getMessage());
             redirectAttributes.addFlashAttribute("postDto", postDto);
+            redirectAttributes.addFlashAttribute(
+                    "uploadedImages",
+                    postService.getPendingEditorImages(postDto.getImageIds(), loginMemberId, draftToken)
+            );
             return "redirect:/posts/new";
         }
     }
@@ -213,17 +217,22 @@ public class PostController {
         }
 
         Long loginMemberId = loginMember == null ? null : loginMember.getId();
+        String draftToken = null;
+        if (session != null) {
+            draftToken = (String) session.getAttribute("postDraftToken");
+        }
+
         try{
-            String draftToken = null;
-            if (session != null) {
-                draftToken = (String) session.getAttribute("postDraftToken");
-            }
             postService.modifyPost(id, postDto, loginMemberId, draftToken,verifiedPostId);
         }
         catch(IllegalArgumentException e){
             model.addAttribute("errorMessage", e.getMessage());
             Post post=postService.findPost(id);
             model.addAttribute("post", post);
+            model.addAttribute(
+                    "uploadedImages",
+                    postService.getPendingEditorImages(postDto.getImageIds(), loginMemberId, draftToken)
+            );
             return "postModify";
         }
 
