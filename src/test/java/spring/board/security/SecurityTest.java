@@ -12,10 +12,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
-import spring.board.domain.Member;
-import spring.board.domain.Role;
-import spring.board.domain.Status;
-import spring.board.repository.MemberRepository;
+import spring.board.member.domain.Member;
+import spring.board.member.domain.Role;
+import spring.board.member.domain.Status;
+import spring.board.member.repository.MemberRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;

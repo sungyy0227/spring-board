@@ -5,8 +5,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import spring.board.domain.Member;
-import spring.board.repository.MemberRepository;
+import spring.board.member.domain.Member;
+import spring.board.member.repository.MemberRepository;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {

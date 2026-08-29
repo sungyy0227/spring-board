@@ -4,8 +4,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import spring.board.domain.Post;
-import spring.board.repository.PostRepository;
+import spring.board.post.domain.Post;
+import spring.board.post.repository.PostRepository;
 
 import java.time.LocalDateTime;
 
