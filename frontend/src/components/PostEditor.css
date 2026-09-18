@@ -1,0 +1,40 @@
+.post-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.post-editor .toastui-editor-defaultUI {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  border-color: var(--border);
+  border-radius: 10px;
+}
+
+.post-editor .toastui-editor-toolbar {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.post-editor .toastui-editor-contents,
+.post-editor .ProseMirror {
+  color: #182230;
+  font-family: var(--sans);
+  font-size: 16px;
+}
+
+.editor-status,
+.editor-error {
+  font-size: 14px;
+}
+
+.editor-status {
+  color: var(--text);
+}
+
+.editor-error {
+  color: #b42318;
+}
