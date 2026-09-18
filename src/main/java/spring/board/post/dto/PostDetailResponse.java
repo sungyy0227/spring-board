@@ -15,6 +15,8 @@ public record PostDetailResponse(
         String poster,
         int viewCount,
         LocalDateTime createdAt,
+        Long memberId,
+        boolean memberWithdrawn,
         List<CommentResponse> comments
 ) {
     public static PostDetailResponse from(Post post) {
@@ -29,6 +31,8 @@ public record PostDetailResponse(
                 post.getPoster(),
                 post.getViewCount(),
                 post.getCreatedAt(),
+                post.getMember() == null ? null : post.getMember().getId(),
+                post.getMember() != null && post.getMember().isWithdrawn(),
                 comments
         );
     }

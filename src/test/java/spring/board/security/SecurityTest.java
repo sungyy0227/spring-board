@@ -53,12 +53,12 @@ public class SecurityTest {
         member.setNickname("tester");
         memberRepository.save(member);
 
-        mockMvc.perform(post("/login")
+        mockMvc.perform(post("/api/v1/auth/login")
+                .accept(org.springframework.http.MediaType.APPLICATION_JSON)
                 .param("loginId","testId")
                 .param("password","123456")
                 .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"))
+                .andExpect(status().isNoContent())
                 .andExpect(authenticated().withUsername("testId"));
     }
 
@@ -73,12 +73,13 @@ public class SecurityTest {
         member.setNickname("tester");
         memberRepository.save(member);
 
-        mockMvc.perform(post("/login")
+        mockMvc.perform(post("/api/v1/auth/login")
+                .accept(org.springframework.http.MediaType.APPLICATION_JSON)
                 .param("loginId","testId")
                 .param("password","wrongPassword")
                 .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login?error"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("LOGIN_FAILED"))
                 .andExpect(unauthenticated());
     }
 
@@ -93,62 +94,61 @@ public class SecurityTest {
         member.setNickname("tester");
         memberRepository.save(member);
 
-        mockMvc.perform(post("/login")
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .accept(org.springframework.http.MediaType.APPLICATION_JSON)
                         .param("loginId","testId")
                         .param("password","123456")
                         .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login?error=withdrawn"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("WITHDRAWN_MEMBER"))
                 .andExpect(unauthenticated());
     }
 
     @Test
     @DisplayName("관리자 페이지는 관리자 권한이 필요하다")
     void adminPageRequiresAdminAuthority() throws Exception {
-        mockMvc.perform(get("/admin"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+        mockMvc.perform(get("/api/v1/admin/runtime"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
     @DisplayName("일반 유저는 관리자 페이지에 접속할 수 없다")
     void userCannotAccessAdminPage() throws Exception {
-        mockMvc.perform(get("/admin")
+        mockMvc.perform(get("/api/v1/admin/runtime")
                 .with(user("uesr").roles("USER")))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+                .andExpect(status().isForbidden());
     }
 
     @Test
     @DisplayName("관리자 유저는 관리자 페이지에 접속할 수 있다")
     void adminCanAccessAdminPage() throws Exception{
-        mockMvc.perform(get("/admin")
+        mockMvc.perform(get("/api/v1/admin/runtime")
                         .with(user("user").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin"));
+                .andExpect(jsonPath("$.devMode").isBoolean());
     }
 
     @Test
     @DisplayName("일반 유저는 게시판 데이터 리셋을 실행할 수 없다")
     void userCannotResetBoardData() throws Exception {
-        mockMvc.perform(post("/admin/reset/board")
+        mockMvc.perform(post("/api/v1/admin/reset/board")
                         .with(user("user").roles("USER"))
                         .with(csrf())
-                        .param("confirmation", "RESET BOARD"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"confirmation\":\"RESET BOARD\"}"))
+                .andExpect(status().isForbidden());
     }
 
     @Test
     @DisplayName("관리자도 확인 문구가 다르면 게시판 데이터를 리셋할 수 없다")
     void adminCannotResetBoardDataWithWrongConfirmation() throws Exception {
-        mockMvc.perform(post("/admin/reset/board")
+        mockMvc.perform(post("/api/v1/admin/reset/board")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
-                        .param("confirmation", "WRONG"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin"))
-                .andExpect(flash().attribute("resetErrorMessage", "확인 문구가 일치하지 않습니다."));
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"confirmation\":\"WRONG\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("ADMIN_RESET_CONFIRMATION_MISMATCH"));
     }
 
     @Test
@@ -162,11 +162,10 @@ public class SecurityTest {
 
         assertSessionIsNotExpired(targetSession);
 
-        mockMvc.perform(post("/admin/members/{id}/remove-admin", targetAdmin.getId())
+        mockMvc.perform(post("/api/v1/admin/members/{id}/remove-admin", targetAdmin.getId())
                         .session(actingAdminSession)
                         .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/members/" + targetAdmin.getId()));
+                .andExpect(status().isNoContent());
 
         Member changedMember = memberRepository.findById(targetAdmin.getId()).orElseThrow();
         assertThat(changedMember.getRole()).isEqualTo(Role.USER);
@@ -185,11 +184,10 @@ public class SecurityTest {
 
         assertSessionIsNotExpired(targetSession);
 
-        mockMvc.perform(post("/admin/members/{id}/grant-admin", targetUser.getId())
+        mockMvc.perform(post("/api/v1/admin/members/{id}/grant-admin", targetUser.getId())
                         .session(actingAdminSession)
                         .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/members/" + targetUser.getId()));
+                .andExpect(status().isNoContent());
 
         Member changedMember = memberRepository.findById(targetUser.getId()).orElseThrow();
         assertThat(changedMember.getRole()).isEqualTo(Role.ADMIN);
@@ -208,11 +206,12 @@ public class SecurityTest {
     }
 
     private MockHttpSession loginAndGetSession(String loginId, String password) throws Exception {
-        MvcResult loginResult = mockMvc.perform(post("/login")
+        MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
+                        .accept(org.springframework.http.MediaType.APPLICATION_JSON)
                         .param("loginId", loginId)
                         .param("password", password)
                         .with(csrf()))
-                .andExpect(status().is3xxRedirection())
+                .andExpect(status().isNoContent())
                 .andExpect(authenticated().withUsername(loginId))
                 .andReturn();
 

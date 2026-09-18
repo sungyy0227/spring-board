@@ -382,6 +382,13 @@ public class PostService {
         return post;
     }
 
+    public Post getPostForEdit(Long loginMemberId, Long postId, Long verifiedPostId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.POST_NOT_FOUND));
+        validateUpdatePermission(loginMemberId, verifiedPostId, post);
+        return post;
+    }
+
     //수정 요청용 권한 확인
     private void validateUpdatePermission(Long loginMemberId,Long verifiedPostId, Post post){
         //회원일경우

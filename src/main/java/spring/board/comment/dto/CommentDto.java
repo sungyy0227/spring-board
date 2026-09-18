@@ -12,6 +12,14 @@ public class CommentDto {
 
     private String guestRawPassword;
 
+    public static CommentDto from(CommentCreateRequest request) {
+        CommentDto commentDto = new CommentDto();
+        commentDto.setCommenter(request.commenter());
+        commentDto.setCommentContent(request.content());
+        commentDto.setGuestRawPassword(request.guestPassword());
+        return commentDto;
+    }
+
     public String getGuestRawPassword() {
         return guestRawPassword;
     }

@@ -21,6 +21,13 @@ public enum ErrorCode {
     DUPLICATE_LOGIN_ID("이미 사용 중인 아이디입니다."),
     DUPLICATE_NICKNAME("이미 사용 중인 닉네임입니다."),
 
+    LOGIN_FAILED("아이디 또는 비밀번호가 올바르지 않습니다."),
+    WITHDRAWN_MEMBER("탈퇴한 회원입니다. 로그인이 불가능합니다."),
+    AUTHENTICATION_REQUIRED("로그인이 필요합니다."),
+    ACCESS_DENIED("접근 권한이 없습니다."),
+
+    ADMIN_RESET_CONFIRMATION_MISMATCH("확인 문구가 일치하지 않습니다."),
+
     IMAGE_STORAGE_FAILURE("이미지 파일 처리에 실패했습니다.");
 
     private final String message;

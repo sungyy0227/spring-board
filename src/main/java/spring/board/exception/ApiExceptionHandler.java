@@ -3,10 +3,10 @@ package spring.board.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import spring.board.post.controller.PostApiController;
 
-@RestControllerAdvice(assignableTypes = PostApiController.class) //PostApiController로 범위 제한
+@RestControllerAdvice(annotations = RestController.class)
 public class ApiExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
@@ -28,6 +28,16 @@ public class ApiExceptionHandler {
         ApiErrorResponse response = ApiErrorResponse.from(exception.getErrorCode());
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgument(IllegalArgumentException exception){
+        ApiErrorResponse response = new ApiErrorResponse(
+                ErrorCode.VALIDATION_FAILED.getCode(),
+                exception.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
 }

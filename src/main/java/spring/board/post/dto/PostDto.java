@@ -15,6 +15,29 @@ public class PostDto {
     private String guestPassword;
     private List<Long> imageIds = new ArrayList<>();
 
+    public static PostDto from(PostCreateRequest request) {
+        PostDto postDto = new PostDto();
+        postDto.setTitle(request.title());
+        postDto.setContent(request.content());
+        postDto.setPoster(request.poster());
+        postDto.setGuestPassword(request.guestPassword());
+
+        if (request.imageIds() != null) {
+            postDto.setImageIds(new ArrayList<>(request.imageIds()));
+        }
+
+        return postDto;
+    }
+
+    public static PostDto from(PostUpdateRequest request) {
+        PostDto postDto = new PostDto();
+        postDto.setTitle(request.title());
+        postDto.setContent(request.content());
+        postDto.setPoster(request.poster());
+        postDto.setImageIds(request.imageIds());
+        return postDto;
+    }
+
     public String getPoster() {
         return poster;
     }
