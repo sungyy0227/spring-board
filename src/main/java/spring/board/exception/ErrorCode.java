@@ -28,7 +28,15 @@ public enum ErrorCode {
 
     ADMIN_RESET_CONFIRMATION_MISMATCH("확인 문구가 일치하지 않습니다."),
 
-    IMAGE_STORAGE_FAILURE("이미지 파일 처리에 실패했습니다.");
+    IMAGE_STORAGE_FAILURE("이미지 파일 처리에 실패했습니다."),
+
+    CHAT_ROOM_NOT_FOUND("채팅방이 존재하지 않습니다."),
+    CHAT_MEMBER_NOT_FOUND("채팅방 멤버가 존재하지 않습니다."),
+    CHAT_INVITE_NOT_FOUND("초대 링크가 존재하지 않습니다."),
+    CHAT_INVITE_ALREADY_EXISTS("이미 초대 링크가 존재합니다."),
+    CHAT_MESSAGE_REQUIRED("메시지를 입력해주세요."),
+    CHAT_ROOM_ACCESS_DENIED("채팅방에 대한 접근 권한이 없습니다."),
+    CHAT_MESSAGE_TOO_LONG("메시지는 500자 이내로 입력해주세요.");
 
     private final String message;
 
