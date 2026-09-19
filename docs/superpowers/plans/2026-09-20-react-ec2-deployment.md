@@ -63,6 +63,7 @@
 3. 서버 `main`을 `git pull --ff-only origin main`으로 갱신한다.
 4. 추적된 Nginx 설정을 설치한 후 `sudo nginx -t`로 검증한다. 실패하면 즉시 기존 설정을 복구한다.
 5. `deploy/deploy.sh`를 실행하여 Spring과 React를 배포한다.
+   - 서버 메모리가 부족하면 로컬 `bootJar`를 `deploy/app.jar`로 전송하고 `BACKEND_BUILD_MODE=prebuilt`를 사용한다.
 6. 컨테이너 상태, Nginx 상태, React 루트·깊은 경로·정적 자산·CSRF API를 smoke test한다.
 7. 실제로 사용한 로컬/원격 명령과 각 명령의 목적, 백업 및 롤백 위치를 최종 보고한다.
 
