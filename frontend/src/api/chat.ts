@@ -16,6 +16,15 @@ export interface ChatRoomInviteResponse {
   expiresAt: string;
 }
 
+export interface ChatRoomInvitePreviewResponse {
+  roomName: string;
+  expiresAt: string;
+}
+
+export interface ChatRoomJoinResponse {
+  roomId: number;
+}
+
 export interface ChatMessageResponse {
   senderId: number;
   senderNickname: string;
@@ -110,6 +119,41 @@ export async function rotateChatRoomInvite(
   }
 
   return response.json() as Promise<ChatRoomInviteResponse>;
+}
+
+export async function getChatRoomInvite(
+  token: string,
+): Promise<ChatRoomInvitePreviewResponse> {
+  const encodedToken = encodeURIComponent(token);
+  const response = await apiFetch(`/api/v1/chat/invites/${encodedToken}`, {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error(await getErrorMessage(response, "초대 정보를 불러오지 못했습니다."));
+  }
+
+  return response.json() as Promise<ChatRoomInvitePreviewResponse>;
+}
+
+export async function joinChatRoomByInvite(
+  token: string,
+): Promise<ChatRoomJoinResponse> {
+  const csrfToken = await getCsrfToken();
+  const encodedToken = encodeURIComponent(token);
+  const response = await apiFetch(`/api/v1/chat/invites/${encodedToken}/join`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      [csrfToken.headerName]: csrfToken.token,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(await getErrorMessage(response, "채팅방에 참여하지 못했습니다."));
+  }
+
+  return response.json() as Promise<ChatRoomJoinResponse>;
 }
 
 export async function getChatRoom(roomId: number): Promise<ChatRoomResponse> {
