@@ -1,0 +1,18 @@
+FROM eclipse-temurin:17-jre-jammy
+
+WORKDIR /app
+
+RUN groupadd --system spring && \
+    useradd --system --gid spring --home-dir /app --no-create-home spring && \
+    mkdir -p /app/uploads/post-images /app/logs && \
+    chown -R spring:spring /app
+
+COPY --chown=spring:spring deploy/app.jar /app/app.jar
+
+ENV SPRING_PROFILES_ACTIVE=prod
+
+USER spring:spring
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

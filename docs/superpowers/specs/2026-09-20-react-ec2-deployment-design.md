@@ -18,6 +18,7 @@ React Router의 직접 접근과 새로고침을 지원하기 위해 정적 파�
 ## 빌드와 배포
 
 - Spring Boot는 기존 `docker compose up -d --build`로 빌드하고 실행한다.
+- 메모리가 부족한 운영 서버에서는 로컬에서 검증한 `bootJar`를 `deploy/app.jar`로 전송하고 `BACKEND_BUILD_MODE=prebuilt`로 런타임 이미지만 조립할 수 있다.
 - React는 서버에 Node.js를 직접 설치하지 않고 `node:24-alpine` 일회성 컨테이너에서 `npm ci`와 `npm run build`를 실행한다.
 - 빌드 결과는 `/var/www/spring-board/releases/<배포시각>`에 복사한다.
 - `/var/www/spring-board/current` 심볼릭 링크를 새 릴리스로 원자적으로 교체한다.

@@ -58,3 +58,6 @@ application-*.properties
 
 # logs
 /logs/
+
+# locally built deployment artifact
+/deploy/app.jar

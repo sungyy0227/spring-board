@@ -5,6 +5,7 @@ PROJECT_DIR="${PROJECT_DIR:-$HOME/spring-board}"
 WEB_ROOT="${WEB_ROOT:-/var/www/spring-board}"
 NGINX_CONFIG="${NGINX_CONFIG:-/etc/nginx/sites-available/spring-board}"
 NGINX_CONFIG_BACKUP="${NGINX_CONFIG_BACKUP:-}"
+BACKEND_BUILD_MODE="${BACKEND_BUILD_MODE:-docker}"
 RELEASE_ID="$(date -u +%Y%m%d%H%M%S)"
 RELEASE_DIR="$WEB_ROOT/releases/$RELEASE_ID"
 NEXT_LINK="$WEB_ROOT/current-next"
@@ -57,7 +58,22 @@ if [ -n "$PREVIOUS_APP_IMAGE" ]; then
     docker image tag "$PREVIOUS_APP_IMAGE" "$ROLLBACK_IMAGE"
 fi
 
-docker compose build app
+case "$BACKEND_BUILD_MODE" in
+    docker)
+        docker compose build app
+        ;;
+    prebuilt)
+        if [ ! -s "$PROJECT_DIR/deploy/app.jar" ]; then
+            echo "Prebuilt JAR not found: $PROJECT_DIR/deploy/app.jar" >&2
+            false
+        fi
+        docker build --file deploy/Dockerfile.prebuilt --tag spring-board-app:latest .
+        ;;
+    *)
+        echo "Unsupported BACKEND_BUILD_MODE: $BACKEND_BUILD_MODE" >&2
+        false
+        ;;
+esac
 
 sudo install -d -m 755 "$WEB_ROOT/releases"
 sudo install -d -m 755 "$RELEASE_DIR"
