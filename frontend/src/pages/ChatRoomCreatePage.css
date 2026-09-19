@@ -1,0 +1,71 @@
+.chat-room-create-page {
+  display: grid;
+  place-items: start center;
+}
+
+.chat-room-create-card {
+  width: min(680px, 100%);
+}
+
+.chat-room-create-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.chat-room-create-heading h1 {
+  margin-bottom: 6px;
+}
+
+.chat-room-create-heading p {
+  margin-bottom: 0;
+}
+
+.chat-room-create-back-link {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.chat-room-create-back-link:hover {
+  text-decoration: underline;
+}
+
+.chat-room-create-form {
+  display: grid;
+  gap: 18px;
+}
+
+.chat-room-create-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.chat-room-create-form label > span {
+  color: var(--text-h);
+  font-weight: 700;
+}
+
+.chat-room-create-form input {
+  width: 100%;
+}
+
+.chat-room-create-form .field-error {
+  margin: 0;
+}
+
+@media (max-width: 560px) {
+  .chat-room-create-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .chat-room-create-form .form-actions,
+  .chat-room-create-form .button {
+    width: 100%;
+  }
+}

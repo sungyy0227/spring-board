@@ -6,6 +6,9 @@ import "./App.css";
 
 const AdminMemberPage = lazy(() => import("./pages/AdminMemberPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
+const ChatRoomCreatePage = lazy(() => import("./pages/ChatRoomCreatePage"));
+const ChatRoomListPage = lazy(() => import("./pages/ChatRoomListPage"));
+const ChatRoomPage = lazy(() => import("./pages/ChatRoomPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const MyPage = lazy(() => import("./pages/MyPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
@@ -30,6 +33,9 @@ export default function App() {
         <Route path="signup" element={<SignupPage />} />
 
         <Route element={<RequireAuth />}>
+          <Route path="chat" element={<ChatRoomListPage />} />
+          <Route path="chat/new" element={<ChatRoomCreatePage />} />
+          <Route path="chat/:roomId" element={<ChatRoomPage />} />
           <Route path="mypage" element={<MyPage />} />
           <Route path="mypage/withdraw" element={<WithdrawPage />} />
         </Route>

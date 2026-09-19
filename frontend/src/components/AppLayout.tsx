@@ -24,6 +24,7 @@ export default function AppLayout() {
           <NavLink to="/posts/new">글쓰기</NavLink>
           {!isLoading && user?.authenticated ? (
             <>
+              <NavLink to="/chat">채팅</NavLink>
               {user.admin && <NavLink to="/admin">관리자</NavLink>}
               <NavLink to="/mypage">{user.nickname} 님</NavLink>
               <button className="link-button" type="button" onClick={() => void handleLogout()}>
