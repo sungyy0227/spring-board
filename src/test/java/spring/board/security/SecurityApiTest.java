@@ -73,6 +73,15 @@ class SecurityApiTest {
     }
 
     @Test
+    @DisplayName("비로그인 사용자는 초대 링크로 채팅방에 참여할 수 없다")
+    void inviteJoinRequiresAuthentication() throws Exception {
+        mockMvc.perform(post("/api/v1/chat/invites/test-token/join")
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"));
+    }
+
+    @Test
     @DisplayName("일반 회원은 관리자 API에 접근할 수 없다")
     void adminApiRequiresAdminRole() throws Exception {
         mockMvc.perform(get("/api/v1/admin/runtime")

@@ -1,0 +1,23 @@
+package spring.board.chat.service;
+
+import org.springframework.stereotype.Component;
+
+import java.security.SecureRandom;
+import java.util.Base64;
+
+@Component
+public class InviteTokenGenerator {
+
+    private static final int TOKEN_BYTE_LENGTH = 9;
+
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    public String generate() {
+        byte[] bytes = new byte[TOKEN_BYTE_LENGTH];
+        secureRandom.nextBytes(bytes);
+
+        return Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(bytes);
+    }
+}

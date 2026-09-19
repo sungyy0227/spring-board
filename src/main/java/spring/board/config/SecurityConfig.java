@@ -3,8 +3,9 @@ package spring.board.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
@@ -29,6 +30,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/admin", "/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/members/me", "/api/v1/members/me/**").authenticated()
+                        .requestMatchers("/api/v1/chat/rooms", "/api/v1/chat/rooms/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/chat/invites/*/join").authenticated()
+                        .requestMatchers("/ws", "/ws/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session

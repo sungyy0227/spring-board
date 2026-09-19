@@ -1,0 +1,80 @@
+.chat-room-invite-page {
+  display: grid;
+  place-items: start center;
+}
+
+.chat-room-invite-card {
+  width: min(620px, 100%);
+}
+
+.chat-room-invite-card > h1 {
+  margin-bottom: 24px;
+}
+
+.chat-room-invite-content {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--accent-bg);
+}
+
+.chat-room-invite-room {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 16px;
+  color: #fff;
+  background: var(--accent);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.chat-room-invite-label,
+.chat-room-invite-expiry {
+  margin: 0;
+}
+
+.chat-room-invite-label {
+  color: var(--accent-dark);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.chat-room-invite-content h2 {
+  margin: 3px 0 7px;
+}
+
+.chat-room-invite-expiry {
+  font-size: 14px;
+}
+
+.chat-room-invite-card .field-error {
+  margin-top: 18px;
+}
+
+.chat-room-invite-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+@media (max-width: 560px) {
+  .chat-room-invite-content {
+    align-items: flex-start;
+  }
+
+  .chat-room-invite-actions,
+  .chat-room-invite-actions .button {
+    width: 100%;
+  }
+
+  .chat-room-invite-actions {
+    flex-direction: column-reverse;
+  }
+}
