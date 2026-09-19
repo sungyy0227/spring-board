@@ -21,7 +21,10 @@ import spring.board.member.repository.MemberRepository;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @Transactional
@@ -102,6 +105,24 @@ class ChatServiceTest {
                 InvalidRequestException.class,
                 () -> chatService.createInvite(chatRoom.getId(), owner.getId())
         );
+    }
+
+    @Test
+    void createInviteReissuesExpiredInviteForSameRoom() {
+        Member owner = saveMember("invite-expired-owner");
+        ChatRoom chatRoom = chatService.createChatRoom("만료 초대 재발급 테스트", owner.getId());
+        ChatRoomInvite expiredInvite = chatRoomInviteRepository.save(new ChatRoomInvite(
+                chatRoom,
+                owner,
+                "expiredToken",
+                LocalDateTime.now().minusMinutes(1)
+        ));
+
+        ChatRoomInvite renewedInvite = chatService.createInvite(chatRoom.getId(), owner.getId());
+
+        assertSame(expiredInvite, renewedInvite);
+        assertNotEquals("expiredToken", renewedInvite.getToken());
+        assertTrue(renewedInvite.getExpiresAt().isAfter(LocalDateTime.now()));
     }
 
     @Test

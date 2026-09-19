@@ -134,13 +134,21 @@ public class ChatService {
         }
 
         ChatRoom chatRoom = chatRoomMember.getChatRoom();
-        if (chatRoomInviteRepository.findByChatRoom(chatRoom).isPresent()) {
-            throw new InvalidRequestException(ErrorCode.CHAT_INVITE_ALREADY_EXISTS);
+        Optional<ChatRoomInvite> existingInvite = chatRoomInviteRepository.findByChatRoom(chatRoom);
+        LocalDateTime now = LocalDateTime.now();
+        if (existingInvite.isPresent()) {
+            ChatRoomInvite chatRoomInvite = existingInvite.get();
+            if (chatRoomInvite.getExpiresAt().isAfter(now)) {
+                throw new InvalidRequestException(ErrorCode.CHAT_INVITE_ALREADY_EXISTS);
+            }
+
+            chatRoomInvite.reissue(inviteTokenGenerator.generate(), now.plusDays(7));
+            return chatRoomInvite;
         }
 
         String inviteToken = inviteTokenGenerator.generate();
         Member member = chatRoomMember.getMember();
-        ChatRoomInvite chatRoomInvite = new ChatRoomInvite(chatRoom, member, inviteToken, LocalDateTime.now().plusDays(7));
+        ChatRoomInvite chatRoomInvite = new ChatRoomInvite(chatRoom, member, inviteToken, now.plusDays(7));
 
         chatRoomInviteRepository.save(chatRoomInvite);
         return chatRoomInvite;

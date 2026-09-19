@@ -54,7 +54,7 @@
 ### Task 4: EC2 백업, 배포, 운영 검증
 
 **Files:**
-- Remote backup: `/etc/nginx/sites-enabled/spring-board.backup-<timestamp>`
+- Remote backup: `/home/ubuntu/nginx-backups/spring-board-<timestamp>.conf`
 - Remote install: `/etc/nginx/sites-available/spring-board`
 - Remote releases: `/var/www/spring-board/releases/<timestamp>`
 
