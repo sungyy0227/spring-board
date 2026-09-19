@@ -167,4 +167,41 @@ public class ChatService {
 
         return chatRoomInvite;
     }
+
+    public ChatRoomInvite getChatRoomInviteByInviteToken(String token) {
+        ChatRoomInvite chatRoomInvite = chatRoomInviteRepository.findByToken(token).orElseThrow(() ->
+                        new NotFoundException(ErrorCode.CHAT_INVITE_NOT_FOUND));
+        if (!chatRoomInvite.getExpiresAt().isAfter(LocalDateTime.now())) {
+            throw new NotFoundException(ErrorCode.CHAT_INVITE_NOT_FOUND);
+        }
+        return chatRoomInvite;
+    }
+
+    public ChatRoomMember joinChatRoomByInviteToken(String token, Long memberId){
+        ChatRoomInvite chatRoomInvite = chatRoomInviteRepository.findByToken(token).orElseThrow(() ->
+                new NotFoundException(ErrorCode.CHAT_INVITE_NOT_FOUND));
+        if (!chatRoomInvite.getExpiresAt().isAfter(LocalDateTime.now())) {
+            throw new NotFoundException(
+                    ErrorCode.CHAT_INVITE_NOT_FOUND
+            );
+        }
+
+        ChatRoom chatRoom = chatRoomInvite.getChatRoom();
+
+        if (chatRoomMemberRepository.existsByChatRoom_IdAndMember_Id(chatRoom.getId(), memberId)) {
+            throw new InvalidRequestException(ErrorCode.CHAT_MEMBER_ALREADY_EXISTS);
+        }
+
+        Member member = memberRepository.findById(memberId).orElseThrow(() ->
+                new NotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+
+        ChatRoomMember chatRoomMember = new ChatRoomMember(
+                chatRoomInvite.getChatRoom(),
+                member,
+                ChatRoomMemberRole.MEMBER
+        );
+
+        chatRoomMemberRepository.save(chatRoomMember);
+        return chatRoomMember;
+    }
 }

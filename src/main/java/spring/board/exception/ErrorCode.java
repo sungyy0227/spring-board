@@ -32,6 +32,7 @@ public enum ErrorCode {
 
     CHAT_ROOM_NOT_FOUND("채팅방이 존재하지 않습니다."),
     CHAT_MEMBER_NOT_FOUND("채팅방 멤버가 존재하지 않습니다."),
+    CHAT_MEMBER_ALREADY_EXISTS("이미 참여 중인 채팅방입니다."),
     CHAT_INVITE_NOT_FOUND("초대 링크가 존재하지 않습니다."),
     CHAT_INVITE_ALREADY_EXISTS("이미 초대 링크가 존재합니다."),
     CHAT_MESSAGE_REQUIRED("메시지를 입력해주세요."),
