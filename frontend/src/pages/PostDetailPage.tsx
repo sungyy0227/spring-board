@@ -92,7 +92,7 @@ export default function PostDetailPage() {
       </article>
 
       <section className="card comments-card">
-        <div className="section-heading"><div><p className="eyebrow">COMMENTS</p><h2>댓글</h2></div><span className="badge">{post.comments.length}개</span></div>
+        <div className="section-heading"><div><h2>댓글</h2></div><span className="badge">{post.comments.length}개</span></div>
         <div className="comment-list">
           {post.comments.length === 0 && <p className="empty-state">첫 번째 댓글을 남겨보세요.</p>}
           {post.comments.map((comment) => {

@@ -41,20 +41,11 @@ export default function PostListPage() {
 
   return (
     <main className="page home-page">
-      <section className="hero-panel">
-        <div>
-          <p className="eyebrow">COMMUNITY BOARD</p>
-          <h1>함께 나누는 이야기</h1>
-          <p>회원과 비회원 모두 자유롭게 참여할 수 있는 게시판입니다.</p>
-        </div>
-        <strong>전체 게시글 {data?.totalElements ?? 0}개</strong>
-      </section>
-
-      <section className="card">
+      <section className="board-section">
         <div className="section-heading">
           <div>
-            <h2>게시글</h2>
-            <p>{keyword ? `'${keyword}' 검색 결과` : "새로운 이야기를 확인해 보세요."}</p>
+            <h1>자유 게시판</h1>
+            {keyword && <p>'{keyword}' 검색 결과</p>}
           </div>
           <form className="search-form" onSubmit={handleSearch}>
             <select value={searchType} onChange={(event) => setSearchType(event.target.value)} aria-label="검색 범위">
@@ -98,7 +89,7 @@ export default function PostListPage() {
             ))}
             {data && pageBlockEnd < data.totalPages && <button type="button" onClick={() => moveToPage(pageBlockEnd + 1)}>다음</button>}
           </nav>
-          <Link className="button primary" to="/posts/new">글쓰기</Link>
+          <Link className="button primary" to="/posts/new"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m16 3 5 5-12 12-6 1 1-6Z M14 5l5 5" /></svg>글쓰기</Link>
         </div>
       </section>
     </main>

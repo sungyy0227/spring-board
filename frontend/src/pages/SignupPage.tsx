@@ -13,7 +13,7 @@ export default function SignupPage() {
   }
   const fieldErrors = (field: SignupValidationError["fieldName"]) => errors.filter((error) => error.fieldName === field);
   return <main className="page auth-page"><section className="auth-card card">
-    <div className="auth-heading"><p className="eyebrow">CREATE ACCOUNT</p><h1>회원가입</h1><p>간단한 정보로 계정을 만들고 게시판에 참여해 보세요.</p></div>
+    <div className="auth-heading"><h1>회원가입</h1></div>
     {generalError && <p className="alert error">{generalError}</p>}
     <form className="stack-form" onSubmit={handleSubmit}>
       <label><span>아이디</span><input value={loginId} onChange={(e) => setLoginId(e.target.value)} placeholder="영문·숫자 5~20자" autoComplete="username" /></label>

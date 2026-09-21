@@ -11,7 +11,7 @@ export default function AdminPage() {
   async function handleBoardReset(event: FormEvent) { event.preventDefault(); if (!window.confirm("게시판의 모든 글, 댓글, 이미지를 삭제하시겠습니까?")) return; try { const result = await resetBoard(confirmation); setMessage(result.message); setError(null); setConfirmation(""); } catch (reason) { setError(reason instanceof Error ? reason.message : "초기화에 실패했습니다."); } }
   async function handleDevReset(target: "posts" | "members") { if (!window.confirm(`개발용 ${target === "posts" ? "게시글" : "회원"} 데이터를 초기화하시겠습니까?`)) return; try { const result = await resetDevData(target); setMessage(result.message); setError(null); } catch (reason) { setError(reason instanceof Error ? reason.message : "초기화에 실패했습니다."); } }
   return <main className="page account-page">
-    <section className="hero-panel"><div><p className="eyebrow">ADMIN CONSOLE</p><h1>관리자 센터</h1><p>회원을 조회하고 게시판 데이터를 관리할 수 있습니다.</p></div><span className="badge">ADMIN</span></section>
+    <section className="hero-panel"><div><h1>관리자 센터</h1></div><span className="badge">ADMIN</span></section>
     {message && <p className="alert success">{message}</p>}{error && <p className="alert error">{error}</p>}
     <section className="card"><div className="section-heading"><div><h2>회원 조회</h2><p>로그인 아이디 또는 닉네임으로 회원을 검색하세요.</p></div></div>
       <form className="search-form" onSubmit={(event) => { event.preventDefault(); void handleSearch("loginId"); }}><input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="아이디 또는 닉네임" /><button className="button primary">아이디 조회</button><button className="button secondary" type="button" onClick={() => void handleSearch("nickname")}>닉네임 조회</button></form>

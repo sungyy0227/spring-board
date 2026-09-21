@@ -52,7 +52,6 @@ function PostCreatePage() {
     <main className="post-create-page">
       <div className="post-create-heading">
         <div>
-          <p className="eyebrow">NEW POST</p>
           <h1>새 글 작성</h1>
         </div>
         <Link className="back-link" to="/">

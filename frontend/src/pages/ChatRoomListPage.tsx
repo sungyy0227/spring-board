@@ -35,9 +35,8 @@ export default function ChatRoomListPage() {
       <section className="chat-room-list-card card">
         <header className="section-heading">
           <div>
-            <p className="eyebrow">MY CHAT ROOMS</p>
             <h1>채팅방</h1>
-            <p>참여 중인 채팅방을 선택하세요.</p>
+
           </div>
           <div className="chat-room-heading-actions">
             {!loading && <strong>{rooms.length}개</strong>}
