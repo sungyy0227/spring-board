@@ -36,9 +36,8 @@ export default function ChatRoomCreatePage() {
       <section className="chat-room-create-card card">
         <header className="chat-room-create-heading">
           <div>
-            <p className="eyebrow">NEW CHAT ROOM</p>
             <h1>채팅방 만들기</h1>
-            <p>새로운 채팅방의 기본 정보를 입력하세요.</p>
+
           </div>
           <Link className="chat-room-create-back-link" to="/chat">
             ← 채팅방 목록

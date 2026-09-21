@@ -32,7 +32,7 @@ export default function PostEditPage() {
   if (!post) return <main className="page"><p className={error ? "alert error" : "status-message"}>{error ?? "수정할 게시글을 불러오는 중입니다."}</p></main>;
   return <main className="page editor-page">
     <section className="card">
-      <div className="section-heading"><div><p className="eyebrow">EDIT POST</p><h1>게시글 수정</h1><p>작성한 내용을 확인하고 필요한 부분을 수정해 보세요.</p></div></div>
+      <div className="section-heading"><div><h1>게시글 수정</h1><p>작성한 내용을 확인하고 필요한 부분을 수정해 보세요.</p></div></div>
       <form className="stack-form" onSubmit={handleSubmit}>
         <label><span>제목</span><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="제목을 입력하세요" /></label>
         <label><span>작성자</span>{post.guest ? <input value={poster} onChange={(e) => setPoster(e.target.value)} /> : <div className="readonly-field">{poster} 님</div>}</label>

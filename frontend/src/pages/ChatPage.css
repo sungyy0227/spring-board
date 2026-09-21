@@ -55,7 +55,7 @@
   border-radius: 999px;
   background: #f2f4f7;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .chat-status span {
@@ -96,8 +96,8 @@
   gap: 12px;
   margin: 14px 20px 0;
   padding: 13px 14px;
-  border: 1px solid #d9dcff;
-  border-radius: 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
   background: var(--accent-bg);
 }
 

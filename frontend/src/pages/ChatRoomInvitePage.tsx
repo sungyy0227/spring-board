@@ -67,7 +67,6 @@ export default function ChatRoomInvitePage() {
   return (
     <main className="page chat-room-invite-page">
       <section className="chat-room-invite-card card">
-        <p className="eyebrow">CHAT INVITE</p>
         <h1>채팅방 초대</h1>
 
         {isLoading && (

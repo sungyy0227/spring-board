@@ -23,7 +23,7 @@ export default function LoginPage() {
 
   const successMessage = (location.state as { successMessage?: string } | null)?.successMessage;
   return <main className="page auth-page"><section className="auth-card card">
-    <div className="auth-heading"><p className="eyebrow">WELCOME BACK</p><h1>로그인</h1><p>계정에 로그인하고 새로운 이야기를 확인해 보세요.</p></div>
+    <div className="auth-heading"><h1>로그인</h1></div>
     {successMessage && <p className="alert success">{successMessage}</p>}{error && <p className="alert error">{error}</p>}
     <form className="stack-form" onSubmit={handleSubmit}>
       <label><span>아이디</span><input value={loginId} onChange={(e) => setLoginId(e.target.value)} autoComplete="username" required /></label>
